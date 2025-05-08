@@ -1,7 +1,8 @@
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddControllers();
+builder.Services.AddSingleton<LLMService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
