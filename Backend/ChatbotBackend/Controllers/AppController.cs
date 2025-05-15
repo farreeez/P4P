@@ -26,12 +26,15 @@ namespace ChatbotBackend.Controllers
         [HttpPost("chat")]
         public async Task<IActionResult> PostChat(String text)
         {
+
+            Console.WriteLine($"User: {text}");
             if (string.IsNullOrWhiteSpace(text))
             {
                 return BadRequest("Message is required.");
             }
 
             var response = await _llmService.GetLLMResponseAsync(text);
+            Console.WriteLine($"Chatbot: {response}");
             return Ok(new { response });
         }
 
