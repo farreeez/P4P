@@ -12,7 +12,7 @@ export class ChatApi {
       const output = {text: message};
       console.log(output); // the console log shows: ""test"
       const botResponse = await post(`${API_COMP_URL}/Chat`, output, {
-        headers: { 'Content-Type': 'text/plain' },
+        headers: { 'Content-Type': 'application/json' },
       });
       return botResponse;
     }

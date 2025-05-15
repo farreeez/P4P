@@ -9,25 +9,6 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
   const { sendMessage } = ChatApi.sendMessageAsync();
 
-  useEffect(() => {
-    const runIt = async () => {
-      try {
-        // Replace with your actual API endpoint
-        const response = await fetch("http://localhost:5152/App/Test", {
-          method: "GET",
-        });
-
-        const data = await response.json();
-
-        console.log(data);
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    runIt();
-  }, []);
-
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
@@ -62,7 +43,7 @@ export default function ChatPage() {
 
       // Add bot message
       const botMessage = {
-        text: data.message || "Sorry, I couldn't process that request.",
+        text: data.response|| "Sorry, I couldn't process that request.",
         sender: "bot",
         timestamp: new Date().toISOString(),
       };
@@ -89,7 +70,7 @@ export default function ChatPage() {
     <div className="chat-container">
       {/* Header */}
       <div className="chat-header">
-        <h1>My Chatbot</h1>
+        <h1>ChatBot</h1>
       </div>
 
       {/* Messages Container */}
