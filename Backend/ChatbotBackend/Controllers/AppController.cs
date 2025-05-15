@@ -1,3 +1,4 @@
+using ChatbotBackend.Model;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatbotBackend.Controllers
@@ -23,17 +24,20 @@ namespace ChatbotBackend.Controllers
             return Ok("It worked!");
         }
 
-        [HttpPost("chat")]
-        public async Task<IActionResult> PostChat(String text)
+        [HttpPost("Chat")]
+        public async Task<IActionResult> PostChat([FromBody] ChatMessage message)
         {
-
-            Console.WriteLine($"User: {text}");
-            if (string.IsNullOrWhiteSpace(text))
+             if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+                
+            Console.WriteLine("works");
+            Console.WriteLine($"User: {message.Text}");
+            if (string.IsNullOrWhiteSpace(message.Text))
             {
                 return BadRequest("Message is required.");
             }
 
-            var response = await _llmService.GetLLMResponseAsync(text);
+            var response = await _llmService.GetLLMResponseAsync(message.Text);
             Console.WriteLine($"Chatbot: {response}");
             return Ok(new { response });
         }
