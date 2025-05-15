@@ -41,6 +41,8 @@ export default function ChatPage() {
     try {
       const data = await sendMessage(userMessage.text);
 
+      console.log(data.response);
+
       // Add bot message
       const botMessage = {
         text: data.response|| "Sorry, I couldn't process that request.",
