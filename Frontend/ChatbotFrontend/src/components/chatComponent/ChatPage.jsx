@@ -41,8 +41,6 @@ export default function ChatPage() {
     try {
       const data = await sendMessage(userMessage.text);
 
-      console.log(data.response);
-
       // Add bot message
       const botMessage = {
         text: data.response|| "Sorry, I couldn't process that request.",
@@ -70,12 +68,20 @@ export default function ChatPage() {
 
   return (
     <div className="chat-container">
-      {/* Header */}
       <div className="chat-header">
         <h1>ChatBot</h1>
+
+        <div className="font-buttons-container">
+          <button className="font-button">
+            +
+          </button>
+
+          <button className="font-button">
+            -
+          </button>
+        </div>
       </div>
 
-      {/* Messages Container */}
       <div className="messages-container">
         <div className="messages-list">
           {messages.length === 0 ? (
@@ -121,7 +127,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input Area */}
       <div className="input-container">
         <div className="input-wrapper">
           <input
