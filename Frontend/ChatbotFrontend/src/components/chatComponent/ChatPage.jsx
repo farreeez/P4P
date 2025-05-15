@@ -8,6 +8,14 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const { sendMessage } = ChatApi.sendMessageAsync();
+  const [fontSize, setFontSize] = useState(16);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--adjustable-font-size",
+      `${fontSize}px`
+    );
+  }, [fontSize]);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -43,7 +51,7 @@ export default function ChatPage() {
 
       // Add bot message
       const botMessage = {
-        text: data.response|| "Sorry, I couldn't process that request.",
+        text: data.response || "Sorry, I couldn't process that request.",
         sender: "bot",
         timestamp: new Date().toISOString(),
       };
@@ -72,11 +80,17 @@ export default function ChatPage() {
         <h1>ChatBot</h1>
 
         <div className="font-buttons-container">
-          <button className="font-button">
+          <button
+            className="font-button"
+            onClick={() => setFontSize((prev) => (prev += 2))}
+          >
             +
           </button>
 
-          <button className="font-button">
+          <button
+            className="font-button"
+            onClick={() => setFontSize((prev) => (prev -= 2))}
+          >
             -
           </button>
         </div>
