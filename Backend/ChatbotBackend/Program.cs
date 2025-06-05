@@ -1,8 +1,19 @@
+using ChatbotBackend.Data;
+using ChatbotBackend.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LLMService>();
+
+// Add DbContext configuration
+builder.Services.AddDbContext<MyDbContext>(options => 
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), 
+        b => b.MigrationsAssembly(typeof(MyDbContext).Assembly.FullName)));
+
+builder.Services.AddScoped<ITestModelRepository, TestModelRepository>(); // Add this line
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
