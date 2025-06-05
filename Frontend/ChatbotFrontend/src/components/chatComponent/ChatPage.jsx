@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import Header from "../shared/Header";
 import "./ChatPage.css";
 import { ChatApi } from "../../api/ChatApi";
 
@@ -8,14 +9,6 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const { sendMessage } = ChatApi.sendMessageAsync();
-  const [fontSize, setFontSize] = useState(16);
-
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--adjustable-font-size",
-      `${fontSize}px`
-    );
-  }, [fontSize]);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -76,26 +69,7 @@ export default function ChatPage() {
 
   return (
     <div className="chat-container">
-      <div className="chat-header">
-        <h1>ChatBot</h1>
-
-        <div className="font-buttons-container">
-          <button
-            className="font-button"
-            onClick={() => setFontSize((prev) => (prev += 2))}
-          >
-            +
-          </button>
-
-          <button
-            className="font-button"
-            onClick={() => setFontSize((prev) => (prev -= 2))}
-          >
-            -
-          </button>
-        </div>
-      </div>
-
+      <Header title="ChatBot" />
       <div className="messages-container">
         <div className="messages-list">
           {messages.length === 0 ? (

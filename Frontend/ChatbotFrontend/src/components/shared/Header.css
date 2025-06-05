@@ -1,0 +1,64 @@
+.app-header {
+  background-color: #3b82f6;
+  color: white;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 35px;
+  font-weight: bold;
+}
+
+.font-buttons-container {
+  display: flex;
+  gap: 8px;
+}
+
+.font-button {
+  margin: 0px 5px;
+  color: white;
+  width: 50px;
+  aspect-ratio: 1/1;
+  background-color: #ff6b00;
+  font-size: 40px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.font-button:hover {
+  background-color: #ff8124;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ff6b00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: var(--adjustable-font-size);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: #ff8124;
+}
+
+.back-button svg {
+  width: 24px;
+  height: 24px;
+}

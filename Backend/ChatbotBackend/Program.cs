@@ -9,9 +9,8 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<LLMService>();
 
 // Add DbContext configuration
-builder.Services.AddDbContext<MyDbContext>(options => 
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), 
-        b => b.MigrationsAssembly(typeof(MyDbContext).Assembly.FullName)));
+builder.Services.AddDbContext<MyDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<ITestModelRepository, TestModelRepository>(); // Add this line
 builder.Services.AddEndpointsApiExplorer();
