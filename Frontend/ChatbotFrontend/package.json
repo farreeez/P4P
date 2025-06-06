@@ -10,9 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "ical.js": "^2.1.0",
     "react": "^19.0.0",
+    "react-big-calendar": "^1.19.2",
+    "react-datepicker": "^8.4.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.6.2"
+    "react-modal": "^3.16.3",
+    "react-router-dom": "^7.6.2",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

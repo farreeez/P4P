@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { FontSizeContext } from "../../context/FontSizeContext";
+import { FontSizeContext } from "../../contexts/FontSizeContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Header.css";
 
