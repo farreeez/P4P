@@ -99,7 +99,7 @@ public class LLMService
 
         var executionSettings = new GeminiPromptExecutionSettings
         {
-            MaxTokens = 512, 
+            MaxTokens = 5120, 
         };
 
         try
@@ -181,66 +181,99 @@ public class LLMService
     /// <returns>A list of Embedding<float> objects for the provided text.</returns>
     public async Task<IList<Embedding<float>>> GenerateEmbeddingForBrainHealthTextAsync()
     {
-        //string brainHealthText = @"
-        //    Keep your brain healthy
-
-        //    A healthy brain helps you live a full life, whatever your age. It lets you think, feel, learn, work and play.
-
-        //    There are simple things you can do every day to protect your brain health. Some of these things are also good for your physical and mental health.
-
-        //    Move more
-        //    Being physically active is one of the best things you can do for your brain. Aim for 30 minutes of moderate-intensity activity, most days of the week. This could be a brisk walk, swimming, cycling or dancing. Try to include activities that get your heart rate up and make you a little breathless. Exercise increases blood flow to the brain, which helps deliver oxygen and nutrients.
-
-        //    Eat well
-        //    A balanced diet rich in fruits, vegetables, whole grains, lean proteins and healthy fats (like those found in olive oil and avocados) supports brain health. Foods high in antioxidants and omega-3 fatty acids are particularly beneficial. Limit processed foods, sugary drinks and excessive saturated fats.
-
-        //    Sleep well
-        //    Quality sleep is crucial for brain health. During sleep, your brain processes information, consolidates memories and clears out waste products. Aim for 7–9 hours of sleep per night. Establish a regular sleep schedule, create a relaxing bedtime routine and ensure your sleep environment is dark, quiet and cool.
-
-        //    Stay connected
-        //    Social interaction and maintaining strong relationships can help keep your brain active and reduce the risk of cognitive decline. Engage in conversations, join clubs, volunteer or spend time with family and friends. Loneliness and isolation can negatively impact brain health.
-
-        //    Challenge your brain
-        //    Keep your mind active by learning new skills, solving puzzles, reading books, playing strategy games or taking up a new hobby. This creates new neural pathways and strengthens existing ones, improving cognitive reserve.
-
-        //    Manage stress
-        //    Chronic stress can have detrimental effects on brain health. Practice stress-reducing techniques such as mindfulness, meditation, yoga or deep breathing exercises. Spend time in nature, listen to music or engage in hobbies you enjoy.
-
-        //    Limit alcohol
-        //    Excessive alcohol consumption can damage brain cells and impair cognitive function. If you drink alcohol, do so in moderation.
-
-        //    Stop smoking
-        //    Smoking significantly increases the risk of stroke, dementia and other brain health problems. Quitting smoking is one of the best things you can do for your overall health, including your brain.
-
-        //    Protect your head
-        //    Wear helmets during sports or activities that pose a risk of head injury. Prevent falls, especially as you get older, by keeping your home clear of hazards and using assistive devices if needed. Head injuries, even mild ones, can contribute to long-term cognitive issues.
-
-        //    Regular health checks
-        //    Work with your doctor to manage chronic conditions like high blood pressure, diabetes and high cholesterol. These conditions can impact brain health if left uncontrolled. Regular check-ups allow for early detection and management of potential issues.
-        //";
-
         string brainHealthText = @"
-Welcome, aspiring fashionistas, to **MangoonFashion**! This isn't your grandma's runway show. This is a game of spontaneous, nonsensical style, where arbitrary fruit-based measurements and unexpected avian interference dictate your sartorial destiny. Forget about trends; embrace the utterly absurd!
+        **Understanding Dementia: A Patient's Guide**
 
-## The Core Gameplay Loop: A Fruity Fashion Frenzy
+        Dementia is a syndrome, not a single disease. It describes a group of symptoms affecting memory, thinking, and social abilities severely enough to interfere with daily life. It is caused by various diseases and conditions that damage brain cells. While memory loss is a common symptom, it's not the only one, and not all memory loss means dementia.
 
-The goal of MangoonFashion is to create the most **""Mangoon-tastic""** outfit within highly restrictive and ever-changing parameters. Players compete in rounds, each focusing on a specific item of clothing or a bizarre theme.
+        **Key Facts about Dementia:**
 
-1.  **The Grand Reveal:** At the start of each round, the **Supreme Mango Maven** (that's you, the designated judge, or a rotating role) announces the garment category (e.g., ""Hats!"", ""Shoes!"", ""Something for your left elbow!"").
-2.  **The Mango Measurement Mandate:** This is where things get truly wild. Before anyone touches fabric, the Supreme Mango Maven places a **fresh, ripe mango** on a measuring tape. The exact *length* of the mango (from stem to tip, in centimeters) becomes the **mandatory length or width** for a key part of the garment being designed. If the mango rolls off, you must use a new mango and restart the measurement! No measuring until the mango is stable!
-3.  **The Ten-Minute Tailor Tantrum:** Players have *exactly* ten minutes to assemble or create an outfit piece that adheres to the Mango Measurement Mandate. You can use anything available to you: clothes from your wardrobe, recycled materials, kitchen towels, anything! Creativity within chaos is key.
-4.  **The Runway of Ridiculousness:** Once the time is up, each player presents their creation. The Supreme Mango Maven scrutinizes each piece not for traditional beauty, but for **""Mangoon-ity""** (how well it incorporates the mango measurement, how absurd it is, and its overall ability to confuse onlookers).
+        * **Progressive:** Most types of dementia are progressive, meaning symptoms start slowly and gradually worsen over time.
+        * **Affects everyone differently:** How dementia affects a person depends on the type of dementia, the parts of the brain affected, and the individual's personality and life experiences.
+        * **Not a normal part of aging:** While it's more common in older adults, dementia is not an inevitable part of aging.
 
-## The Stupid Rules of MangoonFashion
+        **Common Types of Dementia:**
 
-Prepare yourself, for these rules are as arbitrary as they are essential to the game's integrity.
+        * **Alzheimer's Disease:** The most common cause of dementia, characterized by amyloid plaques and tau tangles in the brain.
+        * **Vascular Dementia:** Caused by damage to blood vessels in the brain, often due to strokes or mini-strokes.
+        * **Lewy Body Dementia:** Characterized by abnormal protein deposits (Lewy bodies) in the brain, leading to fluctuating alertness, visual hallucinations, and movement problems.
+        * **Frontotemporal Dementia (FTD):** Affects the frontal and temporal lobes of the brain, impacting personality, behavior, and language.
+        * **Mixed Dementia:** A combination of two or more types of dementia, most commonly Alzheimer's and vascular dementia.
 
-* **Rule of the Rolling Render:** If your chosen mango rolls off the measuring tape *more than three times* during the measurement phase, you must use a **banana** for the measurement instead. The banana's length dictates the width, and its *curve* dictates the required *degree of curvature* in your garment.
-* **The ""Fashion Faux Pas"" Penalty:** If any player is caught taking a selfie with their garment *before* the official judging, they must wear a **tin foil hat** for the remainder of the game. If they already have a tin foil hat, they must wear *two*.
-* **The Banana Peel Challenge:** Midway through *any* round, the Supreme Mango Maven may suddenly declare a ""Banana Peel Challenge!"" All players must then **hop on one leg** while completing their garment for the next 30 seconds. If they lose balance, they must restart their current garment (even if it means starting from scratch).
-* **The Sudden Style Shift:** At random intervals, signaled by the Maven shouting ""SQUID INK!"", all players must immediately incorporate something **black and shiny** into their current garment, regardless of the previous theme or measurement. Failure to do so results in a penalty: you must wear your socks on your hands for the next round.
-* **The Unspoken Rule of the Sock Puppet:** Every participant, without exception, must have a **sock puppet** accompanying them. This puppet does not participate in the fashion, but it must be addressed respectfully and offered fashion advice at least once per round. If the puppet is ignored, it incurs a penalty: the player must wear their garment *inside out* for the next.
-";
+        **Common Symptoms of Dementia:**
+
+        Symptoms vary depending on the type and stage of dementia, but often include:
+
+        * **Memory loss:** Especially difficulty remembering recent events, names, or new information.
+        * **Difficulty with tasks:** Struggling with familiar tasks like cooking, managing finances, or driving.
+        * **Language problems:** Trouble finding the right words, following conversations, or expressing thoughts.
+        * **Disorientation:** Getting lost in familiar places or having trouble understanding time and place.
+        * **Poor judgment:** Making unusual decisions or having difficulty with problem-solving.
+        * **Changes in mood or personality:** Becoming irritable, anxious, withdrawn, or exhibiting unusual behaviors.
+        * **Difficulty with visual and spatial abilities:** Problems judging distances, recognizing objects, or navigating.
+
+        **Getting a Diagnosis:**
+
+        If you or a loved one are experiencing persistent memory problems or changes in thinking, it's important to see a GP as soon as possible. A diagnosis involves:
+
+        * **Medical history:** Discussing symptoms, health conditions, and medications.
+        * **Physical and neurological examination:** To rule out other causes of symptoms.
+        * **Cognitive tests:** To assess memory, thinking, and problem-solving skills.
+        * **Brain scans:** Such as MRI or CT scans, to look for changes in the brain or rule out other conditions like tumors or strokes.
+        * **Blood tests:** To check for deficiencies or other medical conditions that might cause similar symptoms.
+
+        **Living Well with Dementia:**
+
+        While there is currently no cure for most types of dementia, there are many ways to live well and manage symptoms:
+
+        * **Medication:** Some medications can help manage symptoms, especially for Alzheimer's disease.
+        * **Lifestyle choices:**
+            * **Stay physically active:** Regular exercise can help maintain brain health and improve mood.
+            * **Eat a balanced diet:** Rich in fruits, vegetables, whole grains, lean proteins, and healthy fats.
+            * **Get enough sleep:** Aim for 7-9 hours of quality sleep per night.
+            * **Stay socially connected:** Engage in conversations, join clubs, and spend time with loved ones.
+            * **Challenge your brain:** Learn new skills, read, solve puzzles, and engage in hobbies.
+            * **Manage stress:** Practice mindfulness, meditation, or other relaxation techniques.
+            * **Limit alcohol and stop smoking:** These can negatively impact brain health.
+        * **Support services:**
+            * **Dementia-specific organizations:** Organizations like Alzheimers New Zealand, Alzheimer's Society (UK), and Alzheimers.gov offer information, support groups, and resources for people with dementia and their caregivers.
+            * **Local support groups:** Connecting with others who understand can provide emotional support and practical advice.
+            * **Occupational therapy:** To help adapt daily activities and maintain independence.
+            * **Cognitive stimulation therapy (CST):** Structured activities designed to improve memory and thinking skills.
+
+        **Supporting a Person with Dementia (for Family/Caregivers):**
+
+        * **Communication:**
+            * Use short, simple sentences.
+            * Speak slowly and clearly, in a calm and reassuring tone.
+            * Maintain eye contact and use gentle body language.
+            * Listen patiently and allow plenty of time for responses.
+            * Avoid asking too many questions or giving too many choices.
+            * Focus on feelings rather than just facts.
+        * **Daily Care:**
+            * Establish routines to provide structure and reduce confusion.
+            * Break down tasks into smaller, manageable steps.
+            * Create a safe and familiar environment (e.g., remove tripping hazards, good lighting).
+            * Encourage participation in activities they enjoy, adapting as needed.
+        * **Understanding Changed Behavior:**
+            * Remember that challenging behaviors are often a symptom of the disease, not intentional.
+            * Try to identify triggers and adapt the environment or approach.
+            * Respond with affection and reassurance, rather than correction.
+            * Seek guidance from support organizations or healthcare professionals for specific behavioral challenges.
+        * **Self-Care for Caregivers:**
+            * Caring for someone with dementia can be demanding; it's crucial to look after your own well-being.
+            * Seek support from family, friends, and support groups.
+            * Take breaks and engage in activities you enjoy.
+            * Don't hesitate to ask for help from local dementia services or healthcare providers.
+
+        **Sources of Information:**
+
+        * **Alzheimers.gov:** The U.S. government's portal for information on Alzheimer's disease and related dementias. (https://www.alzheimers.gov/)
+        * **Alzheimer's Society (UK):** A leading charity for people affected by dementia in the UK, providing comprehensive information and support. (https://www.alzheimers.org.uk/)
+        * **Alzheimers New Zealand / Dementia NZ:** National organizations providing information, support, and advocacy for people affected by dementia in New Zealand. (https://alzheimers.org.nz/ and https://dementia.nz/)
+
+        This content is for general informational purposes and should not replace professional medical advice. Always consult with a healthcare professional for diagnosis and treatment.
+        ";
         return await GenerateEmbeddingWithDefaultDimensionsAsync(brainHealthText);
     }
 }
