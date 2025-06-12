@@ -1,4 +1,4 @@
-// import { AppContext } from "../contexts/AppContextProvider.jsx";
+import { AppContext } from "../contexts/AppContextProvider.jsx";
 import { useContext } from "react";
 import getAsync from "../hooks/getAsync.js";
 import updateAsync from "../hooks/updateAsync.js";
@@ -17,7 +17,7 @@ export class Calendar {
 	 */
 	static getAsync() {
 		const { currentUser } = useContext(AppContext);
-		const userId = currentUser?._id;
+		const userId = currentUser?.id;
 
 		const { data, isLoading, isError, fetch } = getAsync();
 
@@ -25,7 +25,7 @@ export class Calendar {
 		 * Gets all calendar events.
 		 */
 		async function getCalendarEvents() {
-			const events = await fetch(`${API_CALENDAR_URL}/${userId}`);
+			const events = await fetch(`${API_CALENDAR_URL}/user/${userId}`);
 			return events ?? [];
 		}
 
@@ -37,7 +37,7 @@ export class Calendar {
 	 */
 	static getOngoingAsync() {
 		const { currentUser } = useContext(AppContext);
-		const userId = currentUser?._id;
+		const userId = currentUser?.id;
 
 		const { data, isLoading, isError, fetch } = getAsync();
 

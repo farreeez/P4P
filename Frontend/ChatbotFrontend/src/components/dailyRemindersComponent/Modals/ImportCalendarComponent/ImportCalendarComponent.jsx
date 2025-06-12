@@ -3,7 +3,7 @@ import { useModal } from "../../../../hooks/useModal.js";
 import { useContext, useRef, useState } from "react";
 import "./ImportCalendarComponent.css";
 import CalendarParser from "../../../../utils/CalendarParser.js";
-// import { AppContext } from "../../../../contexts/AppContextProvider.jsx";
+import { AppContext } from "../../../../contexts/AppContextProvider.jsx";
 import { toast } from "react-toastify";
 
 /**
@@ -14,7 +14,7 @@ export default function ImportCalendarComponent({ onEventsImported }) {
 	const { closeModal } = useModal();
 
 	// Hooks
-	// const { currentUser } = useContext(AppContext);
+	const { currentUser } = useContext(AppContext);
 	const { createEvent } = Calendar.createAsync();
 
 	// Files
@@ -76,21 +76,22 @@ export default function ImportCalendarComponent({ onEventsImported }) {
 	 * Upload events to database.
 	 */
 	async function handleSubmit(e) {
-		// e.preventDefault();
+		e.preventDefault();
 
-		// if (!file) {
-		// 	toast.warn("Please select a file first");
-		// 	return;
-		// }
+		if (!file) {
+			toast.warn("Please select a file first");
+			return;
+		}
 
-		// // Read file contents and persist to database
-		// const events = await CalendarParser(file, currentUser?._id);
-		// for (const event of events) {
-		// 	await createEvent(event);
-		// }
+		// Read file contents and persist to database
+		const events = await CalendarParser(file, currentUser?.id);
+		for (const event of events) {
+			console.log(event);
+			await createEvent(event);
+		}
 
-		// // Refresh events
-		// onEventsImported();
+		// Refresh events
+		onEventsImported();
 
 		closeModal();
 	}

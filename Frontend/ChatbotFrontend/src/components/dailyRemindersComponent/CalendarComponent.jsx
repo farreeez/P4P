@@ -37,8 +37,6 @@ export default function CalendarComponent({
 		if (readOnly) return;
 
 		const { event, start, end } = data;
-
-		// Also shift event date
 		const eventDate = new Date(start);
 
 		setEvents(prevEvents =>
@@ -48,10 +46,14 @@ export default function CalendarComponent({
 					: existingEvent,
 			),
 		);
+
 		updateEvent(event.id, {
+			eventName: event.title,
+			eventDescription: event.eventDescription,
+			eventDate: eventDate,
 			startTime: start,
 			endTime: end,
-			eventDate: eventDate,
+			category: event.category,
 		});
 	}
 
@@ -62,8 +64,6 @@ export default function CalendarComponent({
 		if (readOnly) return;
 
 		const { event, start, end } = data;
-
-		// Also shift event date
 		const eventDate = new Date(start);
 
 		setEvents(prevEvents =>
@@ -74,11 +74,13 @@ export default function CalendarComponent({
 			),
 		);
 
-		// Update database
 		updateEvent(event.id, {
+			eventName: event.title,
+			eventDescription: event.eventDescription,
+			eventDate: eventDate,
 			startTime: start,
 			endTime: end,
-			eventDate: eventDate,
+			category: event.category,
 		});
 	}
 

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-// import { AppContext } from "../../../../contexts/AppContextProvider.jsx";
+import { AppContext } from "../../../../contexts/AppContextProvider.jsx";
 import { useModal } from "../../../../hooks/useModal.js";
 import { Calendar } from "../../../../api/calendarApi.js";
 import CalendarEventFormComponent from "../../CalendarEventFormComponent/CalendarEventFormComponent.jsx";
@@ -22,7 +22,7 @@ export default function EditCalendarEventComponent({ event, onEventUpdated }) {
 		endTime: new Date(),
 		category: "Work",
 		isPrivate: true,
-		userId: currentUser?._id,
+		userId: currentUser?.id,
 	});
 
 	useEffect(() => {
@@ -35,7 +35,7 @@ export default function EditCalendarEventComponent({ event, onEventUpdated }) {
 				endTime: event.end || new Date(),
 				category: event.category || "Work",
 				isPrivate: event.isPrivate || false,
-				userId: event.userId || currentUser?._id,
+				userId: event.userId || currentUser?.id,
 			});
 		}
 	}, [event, currentUser]);

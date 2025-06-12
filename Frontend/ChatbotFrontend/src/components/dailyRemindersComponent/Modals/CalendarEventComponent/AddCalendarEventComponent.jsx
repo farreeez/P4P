@@ -3,13 +3,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import CalendarEventFormComponent from "../../CalendarEventFormComponent/CalendarEventFormComponent.jsx";
 import { Calendar } from "../../../../api/calendarApi.js";
 import { useModal } from "../../../../hooks/useModal.js";
-// import { AppContext } from "../../../../contexts/AppContextProvider.jsx";
+import { AppContext } from "../../../../contexts/AppContextProvider.jsx";
 
 /**
  * Add calendar event component.
  */
 export default function AddCalendarEventComponent({ onEventAdded }) {
-	// const { currentUser } = useContext(AppContext);
+	const { currentUser } = useContext(AppContext);
 	const { closeModal } = useModal();
 	const { createEvent } = Calendar.createAsync();
 
@@ -21,8 +21,7 @@ export default function AddCalendarEventComponent({ onEventAdded }) {
 		endTime: new Date(new Date().setHours(new Date().getHours() + 1)),
 		category: "Work",
 		isPrivate: true,
-		// userId: currentUser?._id,
-		userId: 0,
+		userId: currentUser?.id,
 	});
 
 	/**
