@@ -5,6 +5,8 @@ export const AppContext = createContext({
 	currentUser: null,
 	login: () => {},
 	logout: () => {},
+	chatMessages: [],
+	setChatMessages: () => {},
 });
 
 /**
@@ -15,6 +17,7 @@ export function AppContextProvider({ children }) {
 		const storedUser = localStorage.getItem("currentUser");
 		return storedUser ? JSON.parse(storedUser) : null;
 	});
+	const [chatMessages, setChatMessages] = useState([]);
 
 
 	// Update localStorage whenever currentUser
@@ -47,6 +50,8 @@ export function AppContextProvider({ children }) {
 		setCurrentUser,
 		login,
 		logout,
+		chatMessages,
+		setChatMessages,
 	};
 
 	return (
