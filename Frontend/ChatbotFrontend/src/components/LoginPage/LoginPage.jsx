@@ -58,21 +58,9 @@ export default function LoginPage() {
 		}
 	}
 
-	/**
-	 * Return to landing page.
-	 */
-	function onBack() {
-		navigate("/");
-	}
 
 	return (
 		<>
-			<button
-				className={`button-secondary ${styles.backButton}`}
-				onClick={onBack}
-			>
-				Go Back
-			</button>
 			<div className={styles.container}>
 				<div className="form-container">
 					<div>
