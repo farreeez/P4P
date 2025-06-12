@@ -10,7 +10,7 @@ export default function HomePage() {
       <Header title="Senior Helper" />
 
       <div className="menu-container">
-        <button className="menu-button" onClick={() => navigate("/chat")}>
+        <button className="menu-button" onClick={() => navigate("/app/chat")}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -23,7 +23,7 @@ export default function HomePage() {
           <span>Chat Assistant</span>
         </button>
 
-        <button className="menu-button" onClick={() => navigate("/exercises")}>
+        <button className="menu-button" onClick={() => navigate("/app/exercises")}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -36,7 +36,7 @@ export default function HomePage() {
           <span>Brain Exercises</span>
         </button>
 
-        <button className="menu-button" onClick={() => navigate("/reminders")}>
+        <button className="menu-button" onClick={() => navigate("/app/reminders")}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -49,7 +49,7 @@ export default function HomePage() {
           <span>Daily Reminders</span>
         </button>
 
-        <button className="menu-button" onClick={() => navigate("/settings")}>
+        <button className="menu-button" onClick={() => navigate("/app/settings")}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"

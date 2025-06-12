@@ -55,25 +55,6 @@ export class Calendar {
 	}
 
 	/**
-	 * Gets public calendar events.
-	 */
-	static getPublicAsync() {
-		const { data, isLoading, isError, fetch } = getAsync();
-
-		/**
-		 * Gets public calendar events.
-		 */
-		async function getPublicCalendarEvents(userId) {
-			const events = await fetch(
-				`${API_CALENDAR_URL}/friendsCalendar/${userId}`,
-			);
-			return events ?? [];
-		}
-
-		return { getPublicCalendarEvents, data, isLoading, isError };
-	}
-
-	/**
 	 * Creates a new calendar event.
 	 */
 	static createAsync() {
