@@ -6,7 +6,6 @@ builder.Services.AddSingleton<LLMService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add services to the container.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost", policy =>

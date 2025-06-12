@@ -18,12 +18,6 @@ namespace ChatbotBackend.Controllers
             _llmService = llmService;
         }
 
-        [HttpGet("Test")]
-        public ActionResult testEndpoint()
-        {
-            return Ok("It worked!");
-        }
-
         [HttpPost("Chat")]
         public async Task<IActionResult> PostChat([FromBody] ChatMessage message)
         {
