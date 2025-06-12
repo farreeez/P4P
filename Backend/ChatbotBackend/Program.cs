@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LLMService>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
+builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
 
 // Add DbContext configuration
 builder.Services.AddDbContext<MyDbContext>(options =>
