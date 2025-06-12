@@ -13,16 +13,17 @@ export default function AddCalendarEventComponent({ onEventAdded }) {
 	const { closeModal } = useModal();
 	const { createEvent } = Calendar.createAsync();
 
-	// const [formData, setFormData] = useState({
-	// 	eventName: "",
-	// 	eventDescription: "",
-	// 	eventDate: new Date(),
-	// 	startTime: new Date(),
-	// 	endTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-	// 	category: "Work",
-	// 	isPrivate: true,
-	// 	userId: currentUser?._id,
-	// });
+	const [formData, setFormData] = useState({
+		eventName: "",
+		eventDescription: "",
+		eventDate: new Date(),
+		startTime: new Date(),
+		endTime: new Date(new Date().setHours(new Date().getHours() + 1)),
+		category: "Work",
+		isPrivate: true,
+		// userId: currentUser?._id,
+		userId: 0,
+	});
 
 	/**
 	 * Handle input change for text and checkbox fields.
