@@ -1,0 +1,153 @@
+.event-form-header {
+	margin-bottom: 20px;
+}
+
+.event-form-header h2 {
+	font-size: 24px;
+	margin: 0 0 4px 0;
+	color: black;
+}
+
+.event-form-header p {
+	margin: 0;
+	color: #333;
+	font-size: 14px;
+}
+
+.form-group {
+	margin-bottom: 16px;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 6px;
+	font-weight: 500;
+	font-size: 14px;
+	color: #333;
+}
+
+input[type="text"],
+textarea,
+.date-input,
+.time-input,
+.category-select {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #b0abab;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #333;
+	background-color: #fff;
+	box-sizing: border-box;
+	font-family: inherit;
+}
+
+textarea {
+	height: 80px;
+	resize: vertical;
+}
+
+.time-group {
+	display: flex;
+	gap: 16px;
+}
+
+.time-input {
+	flex: 1;
+}
+
+.date-picker-container,
+.time-picker-container,
+.select-container {
+	position: relative;
+}
+
+.calendar-icon,
+.time-icon,
+.select-arrow {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: #333;
+}
+
+.category-select {
+	appearance: none;
+	cursor: pointer;
+}
+
+.checkbox-group {
+	margin-bottom: 16px;
+}
+
+.checkbox-container {
+	display: flex;
+	align-items: center;
+	position: relative;
+	cursor: pointer;
+	user-select: none;
+	font-size: 14px;
+	color: #333;
+	padding-left: 28px;
+	min-height: 20px;
+}
+
+/* Hidden default checkbox */
+.checkbox-container input {
+	position: absolute;
+	opacity: 0;
+	cursor: pointer;
+	height: 0;
+	width: 0;
+}
+
+/* Custom checkbox */
+.checkmark {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	height: 18px;
+	width: 18px;
+	background-color: white;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+	background-color: #000;
+	border-color: #000;
+}
+
+/* Create the checkmark/indicator */
+.checkmark:after {
+	content: "";
+	position: absolute;
+	display: none;
+}
+
+/* Show the checkmark when checked */
+.checkbox-container input:checked ~ .checkmark:after {
+	display: block;
+}
+
+/* Style the checkmark/indicator */
+.checkbox-container .checkmark:after {
+	left: 6px;
+	top: 2px;
+	width: 5px;
+	height: 10px;
+	border: solid white;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.react-datepicker-wrapper {
+	width: 100%;
+}
+
+.react-datepicker__input-container {
+	width: 100%;
+}

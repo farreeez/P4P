@@ -1,8 +1,20 @@
+using ChatbotBackend.Data;
+using ChatbotBackend.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LLMService>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
+builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
+
+// Add DbContext configuration
+builder.Services.AddDbContext<MyDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ITestModelRepository, TestModelRepository>(); // Add this line
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

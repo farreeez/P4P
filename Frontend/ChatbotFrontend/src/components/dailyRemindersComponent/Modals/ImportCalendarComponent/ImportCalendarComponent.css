@@ -1,0 +1,72 @@
+.event-form-header {
+	margin-bottom: 20px;
+}
+
+.event-form-header h2 {
+	font-size: 24px;
+	margin: 0 0 4px 0;
+	color: black;
+}
+
+.file-drop-area {
+	border: 2px dashed #ccc;
+	border-radius: 8px;
+	padding: 30px;
+	text-align: center;
+	cursor: pointer;
+	margin-bottom: 20px;
+	transition: all 0.3s ease;
+	background-color: #f9f9f9;
+	min-height: 120px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.file-drop-area.dragging {
+	border-color: #000;
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+.file-drop-area.has-file {
+	border-color: #4b46c2;
+	background-color: #d9d9f6;
+}
+
+.drop-message {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.drop-message .icon {
+	font-size: 32px;
+	margin-bottom: 10px;
+}
+
+.drop-message p {
+	margin: 0;
+	color: #666;
+}
+
+.file-info {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+.file-name {
+	font-weight: 500;
+	margin-bottom: 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 70%;
+}
+
+.file-size {
+	color: #666;
+	font-size: 12px;
+}
