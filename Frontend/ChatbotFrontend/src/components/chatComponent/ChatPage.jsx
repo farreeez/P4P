@@ -3,6 +3,8 @@ import Header from "../shared/Header";
 import "./ChatPage.css";
 import { ChatApi } from "../../api/ChatApi";
 import { AppContext } from "../../contexts/AppContextProvider";
+import { TTS } from "../../api/ttsApi";
+import { playAudioFromBase64 } from "../../utils/audioPlayer";
 
 export default function ChatPage() {
   const { chatMessages, setChatMessages } = useContext(AppContext);
@@ -10,6 +12,8 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const { sendMessage } = ChatApi.sendMessageAsync();
+  const { synthesize } = TTS.synthesizeAsync();
+  const [playingIndex, setPlayingIndex] = useState(null);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -61,6 +65,19 @@ export default function ChatPage() {
     }
   };
 
+  // Play TTS for a bot message
+  const handlePlayTTS = async (text, index) => {
+    try {
+      setPlayingIndex(index);
+      const ttsResponse = await synthesize(text);
+      await playAudioFromBase64(ttsResponse);
+    } catch (err) {
+      console.error("TTS playback error:", err);
+    } finally {
+      setPlayingIndex(null);
+    }
+  };
+
   return (
     <div className="chat-container">
       <Header title="ChatBot" />
@@ -79,7 +96,36 @@ export default function ChatPage() {
                     ? "user-message-wrapper"
                     : "bot-message-wrapper"
                 }`}
+                style={{ alignItems: "flex-end" }}
               >
+                {/* Bot play button outside the bubble */}
+                {message.sender === "bot" && !message.isError && (
+                  <button
+                    style={{
+                      marginRight: 8,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      verticalAlign: "middle",
+                      padding: 0,
+                      outline: "none",
+                      alignSelf: "flex-start",
+                    }}
+                    title="Play message"
+                    onClick={() => handlePlayTTS(message.text, index)}
+                    disabled={playingIndex === index}
+                  >
+                    {playingIndex === index ? (
+                      <span role="img" aria-label="Playing">
+                        🔊
+                      </span>
+                    ) : (
+                      <span role="img" aria-label="Play">
+                        ▶️
+                      </span>
+                    )}
+                  </button>
+                )}
                 <div
                   className={`message ${
                     message.sender === "user"

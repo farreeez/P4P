@@ -11,6 +11,7 @@ builder.Services.AddSingleton<LLMService>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
 builder.Services.AddSingleton<TextToSpeechService>(); // Add TTS service
+builder.Services.AddSingleton<SpeechToTextService>(); // Add this line
 builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
 
