@@ -8,9 +8,9 @@ namespace ChatbotBackend.Model
         [Required]
         public required string Text { get; set; }
         
-        public string LanguageCode { get; set; } = "en-US";
+        public string LanguageCode { get; set; } = "en-AU";
 
-        public string? VoiceName { get; set; } = "en-US-Chirp3-HD-Kore";
+        public string? VoiceName { get; set; } = "en-AU-Chirp3-HD-Kore";
         
         public string VoiceGender { get; set; } = "Female"; // Neutral, Male, Female
         

@@ -51,7 +51,7 @@ namespace ChatbotBackend
         /// <returns>Audio content as byte array</returns>
         public async Task<byte[]> ConvertTextToSpeechAsync(
             string text,
-            string languageCode = "en-US",
+            string languageCode = "en-AU",
             string? voiceName = null,
             SsmlVoiceGender voiceGender = SsmlVoiceGender.Neutral,
             AudioEncoding audioEncoding = AudioEncoding.Mp3)
@@ -113,7 +113,7 @@ namespace ChatbotBackend
         /// <returns>Audio content as byte array</returns>
         public async Task<byte[]> ConvertSsmlToSpeechAsync(
             string ssml,
-            string languageCode = "en-US",
+            string languageCode = "en-AU",
             string? voiceName = null,
             SsmlVoiceGender voiceGender = SsmlVoiceGender.Neutral,
             AudioEncoding audioEncoding = AudioEncoding.Mp3)

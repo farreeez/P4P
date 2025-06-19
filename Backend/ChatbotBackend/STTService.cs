@@ -11,19 +11,19 @@ namespace ChatbotBackend
         public SpeechToTextService(ILogger<SpeechToTextService> logger, IConfiguration configuration)
         {
             _logger = logger;
-            
+
             try
             {
                 // Set environment variable for Google Cloud credentials
                 var keyFilePath = configuration["GoogleCloud:KeyFilePath"];
-                
+
                 if (!string.IsNullOrEmpty(keyFilePath))
                 {
                     if (!File.Exists(keyFilePath))
                     {
                         throw new FileNotFoundException($"Google Cloud service account key file not found at: {keyFilePath}");
                     }
-                    
+
                     // Set the environment variable that Google Cloud libraries expect
                     Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", keyFilePath);
                     _logger.LogInformation("Set GOOGLE_APPLICATION_CREDENTIALS to: {KeyFilePath}", keyFilePath);
@@ -40,31 +40,30 @@ namespace ChatbotBackend
             }
         }
 
-        /// <summary>
-        /// Converts audio bytes to text using synchronous recognition
-        /// </summary>
-        /// <param name="audioBytes">Audio data as byte array</param>
-        /// <param name="languageCode">Language code (e.g., "en-US", "es-ES")</param>
-        /// <param name="sampleRateHertz">Sample rate of the audio</param>
-        /// <param name="audioEncoding">Audio encoding format</param>
-        /// <param name="enableAutomaticPunctuation">Enable automatic punctuation</param>
-        /// <returns>Transcribed text</returns>
         public async Task<string> ConvertSpeechToTextAsync(
-            byte[] audioBytes,
-            string languageCode = "en-US",
-            int sampleRateHertz = 16000,
-            RecognitionConfig.Types.AudioEncoding audioEncoding = RecognitionConfig.Types.AudioEncoding.WebmOpus,
-            bool enableAutomaticPunctuation = true)
+    byte[] audioBytes,
+    string languageCode = "en-US",
+    int sampleRateHertz = 16000,
+    RecognitionConfig.Types.AudioEncoding audioEncoding = RecognitionConfig.Types.AudioEncoding.Mp3,
+    bool enableAutomaticPunctuation = true)
         {
             try
             {
                 var config = new RecognitionConfig
                 {
                     Encoding = audioEncoding,
-                    SampleRateHertz = sampleRateHertz,
                     LanguageCode = languageCode,
                     EnableAutomaticPunctuation = enableAutomaticPunctuation
                 };
+
+                // Only set sample rate for formats that require it
+                // For WEBM_OPUS and other compressed formats, let Google Cloud auto-detect
+                if (audioEncoding == RecognitionConfig.Types.AudioEncoding.Linear16 ||
+                    audioEncoding == RecognitionConfig.Types.AudioEncoding.Mulaw)
+                {
+                    config.SampleRateHertz = sampleRateHertz;
+                }
+                // Don't set sample rate for: MP3, FLAC, WEBM_OPUS, OGG_OPUS, AMR, AMR_WB
 
                 var audio = new RecognitionAudio
                 {
@@ -88,20 +87,11 @@ namespace ChatbotBackend
             }
         }
 
-        /// <summary>
-        /// Converts audio bytes to text with detailed results including confidence scores
-        /// </summary>
-        /// <param name="audioBytes">Audio data as byte array</param>
-        /// <param name="languageCode">Language code</param>
-        /// <param name="sampleRateHertz">Sample rate of the audio</param>
-        /// <param name="audioEncoding">Audio encoding format</param>
-        /// <param name="maxAlternatives">Maximum number of recognition alternatives</param>
-        /// <returns>Detailed recognition results</returns>
         public async Task<SpeechRecognitionResult> ConvertSpeechToTextDetailedAsync(
             byte[] audioBytes,
             string languageCode = "en-US",
             int sampleRateHertz = 16000,
-            RecognitionConfig.Types.AudioEncoding audioEncoding = RecognitionConfig.Types.AudioEncoding.WebmOpus,
+            RecognitionConfig.Types.AudioEncoding audioEncoding = RecognitionConfig.Types.AudioEncoding.Mp3,
             int maxAlternatives = 3)
         {
             try
@@ -109,13 +99,19 @@ namespace ChatbotBackend
                 var config = new RecognitionConfig
                 {
                     Encoding = audioEncoding,
-                    SampleRateHertz = sampleRateHertz,
                     LanguageCode = languageCode,
                     MaxAlternatives = maxAlternatives,
                     EnableAutomaticPunctuation = true,
                     EnableWordTimeOffsets = true,
                     EnableWordConfidence = true
                 };
+
+                // Only set sample rate for formats that require it
+                if (audioEncoding == RecognitionConfig.Types.AudioEncoding.Linear16 ||
+                    audioEncoding == RecognitionConfig.Types.AudioEncoding.Mulaw)
+                {
+                    config.SampleRateHertz = sampleRateHertz;
+                }
 
                 var audio = new RecognitionAudio
                 {

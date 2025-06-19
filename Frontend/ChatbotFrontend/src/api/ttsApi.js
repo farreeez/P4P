@@ -14,8 +14,8 @@ export class TTS {
     async function synthesize(text, options = {}) {
       const request = {
         text: text,
-        languageCode: options.languageCode ?? "en-US",
-        voiceName: options.voiceName ?? "en-US-Chirp3-HD-Kore",
+        languageCode: options.languageCode ?? "en-AU",
+        voiceName: options.voiceName ?? "en-AU-Chirp3-HD-Kore",
         voiceGender: options.voiceGender ?? "Female",
         audioEncoding: options.audioEncoding ?? "MP3",
         isSSML: options.isSSML ?? false
@@ -37,8 +37,8 @@ export class TTS {
     async function synthesizeAudio(text, options = {}) {
       const request = {
         text: text,
-        languageCode: options.languageCode ?? "en-US",
-        voiceName: options.voiceName ?? "en-US-Chirp3-HD-Kore",
+        languageCode: options.languageCode ?? "en-AU",
+        voiceName: options.voiceName ?? "en-AU-Chirp3-HD-Kore",
         voiceGender: options.voiceGender ?? "Female",
         audioEncoding: options.audioEncoding ?? "MP3",
         isSSML: options.isSSML ?? false

@@ -91,7 +91,7 @@ namespace ChatbotBackend.Controllers
         [HttpPost("transcribe-detailed")]
         public async Task<IActionResult> TranscribeAudioDetailed(
             IFormFile audioFile,
-            [FromForm] string languageCode = "en-US",
+            [FromForm] string languageCode = "en-AU",
             [FromForm] int sampleRate = 16000,
             [FromForm] string audioEncoding = "WEBM_OPUS",
             [FromForm] int maxAlternatives = 3)
@@ -168,7 +168,7 @@ namespace ChatbotBackend.Controllers
                 // Transcribe audio
                 var transcription = await _sttService.ConvertSpeechToTextAsync(
                     audioBytes,
-                    request.LanguageCode ?? "en-US",
+                    request.LanguageCode ?? "en-AU",
                     request.SampleRate ?? 16000,
                     encoding);
 
@@ -176,7 +176,7 @@ namespace ChatbotBackend.Controllers
                 {
                     Message = "Audio successfully transcribed",
                     Transcription = transcription,
-                    LanguageCode = request.LanguageCode ?? "en-US",
+                    LanguageCode = request.LanguageCode ?? "en-AU",
                     AudioSizeBytes = audioBytes.Length,
                     AudioFormat = request.AudioEncoding ?? "webm"
                 };

@@ -199,7 +199,7 @@ namespace ChatbotBackend.Controllers
                 // Convert the chat response to speech
                 var audioContent = await _ttsService.ConvertTextToSpeechAsync(
                     request.ChatResponse,
-                    request.LanguageCode ?? "en-US",
+                    request.LanguageCode ?? "en-AU",
                     request.VoiceName,
                     voiceGender,
                     audioEncoding);
