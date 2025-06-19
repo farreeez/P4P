@@ -9,3 +9,6 @@ obj/
 
 # Ignore temporary files
 *.cache
+
+# Ignore secrets
+ChatbotBackend/tts-api-key.json

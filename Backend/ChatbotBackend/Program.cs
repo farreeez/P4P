@@ -1,3 +1,4 @@
+using ChatbotBackend;
 using ChatbotBackend.Data;
 using ChatbotBackend.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LLMService>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
+builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
+builder.Services.AddSingleton<TextToSpeechService>(); // Add TTS service
 builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
 
