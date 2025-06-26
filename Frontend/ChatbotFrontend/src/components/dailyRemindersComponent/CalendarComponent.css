@@ -1,46 +1,394 @@
+:root {
+  --primary-blue: #3b82f6;
+  --primary-blue-hover: #2563eb;
+  --success-green: #10b981;
+  --warning-amber: #f59e0b;
+  --error-red: #ef4444;
+  --purple: #8b5cf6;
+  --indigo: #6366f1;
+  
+  /* Calendar specific colors */
+  --calendar-work: #0ea5e9;
+  --calendar-personal: #ec4899;
+  --calendar-family: #10b981;
+  --calendar-social: #8b5cf6;
+  --calendar-default: var(--primary-blue);
+  
+  /* Sophisticated color palette */
+  --background-primary: #fafbfc;
+  --background-secondary: #ffffff;
+  --surface-elevated: #ffffff;
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  
+  /* Text colors */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Calendar container styling */
+.calendar-app {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  height: 100%;
+  min-height: 600px;
+}
+
+/* Toolbar styling */
+.rbc-toolbar {
+  padding: 16px 0 24px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 .rbc-toolbar button {
-	border-radius: 6px !important;
-	font-size: 14px;
-	width: auto;
-	margin: 0 2px !important;
-	transition: all 0.2s ease;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  width: auto !important;
+  margin: 0 4px !important;
+  padding: 10px 16px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 2px solid var(--border-light) !important;
+  background: var(--surface-elevated) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-sm) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.rbc-toolbar button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.3) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .rbc-toolbar button:hover {
-	background-color: #e2e8f0;
+  background: var(--primary-blue) !important;
+  color: white !important;
+  border-color: var(--primary-blue) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.rbc-toolbar button:hover::before {
+  opacity: 1;
 }
 
 .rbc-toolbar button.rbc-active {
-	background-color: #4b46c2 !important;
-	color: white !important;
-	border-color: #4b46c2 !important;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--indigo) 100%) !important;
+  color: white !important;
+  border-color: var(--primary-blue) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px) !important;
 }
 
-.rbc-button-link:hover {
-	background-color: #4b46c2;
-	color: white;
-	text-decoration: none;
+.rbc-toolbar-label {
+  font-weight: 700 !important;
+  font-size: 20px !important;
+  color: var(--text-primary) !important;
+  margin: 0 16px !important;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+/* Navigation buttons */
+.rbc-btn-group button {
+  min-width: 44px !important;
+}
+
+.rbc-btn-group button:first-child {
+  border-top-right-radius: 4px !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+.rbc-btn-group button:last-child {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+}
+
+/* Header styling */
 .rbc-header {
-	padding: 12px 4px;
-	font-weight: 600;
-	text-transform: uppercase;
-	font-size: 0.75rem;
-	letter-spacing: 0.05em;
-	color: #4b5563;
-	background-color: #f8fafc;
+  padding: 16px 8px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+  letter-spacing: 0.1em !important;
+  color: var(--text-secondary) !important;
+  background: linear-gradient(135deg, var(--surface-elevated) 0%, #f8fafc 100%) !important;
+  border-bottom: 2px solid var(--border-light) !important;
+  position: relative;
 }
 
+.rbc-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--primary-blue) 50%, transparent 100%);
+  opacity: 0.3;
+}
+
+/* Date cell styling */
+.rbc-date-cell {
+  padding: 8px !important;
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.rbc-date-cell:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.rbc-off-range {
+  color: var(--text-tertiary) !important;
+}
+
+.rbc-today {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%) !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  color: var(--primary-blue) !important;
+}
+
+/* Event styling */
 .rbc-event {
-	background-color: #4b46c2;
-	border: none;
-	border-radius: 4px;
-	padding: 4px 8px;
-	font-size: 0.85rem;
-	transition: transform 0.1s ease;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  box-shadow: var(--shadow-sm) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.rbc-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .rbc-event:hover {
-	transform: scale(1.02);
+  transform: scale(1.03) translateY(-2px) !important;
+  box-shadow: var(--shadow-md) !important;
+  z-index: 10 !important;
+}
+
+.rbc-event:hover::before {
+  opacity: 1;
+}
+
+.rbc-event.rbc-selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Event content */
+.rbc-event-content {
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+}
+
+/* Time grid styling */
+.rbc-time-view {
+  border: 1px solid var(--border-light) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: var(--surface-elevated) !important;
+}
+
+.rbc-time-header {
+  border-bottom: 2px solid var(--border-light) !important;
+  background: var(--surface-elevated) !important;
+}
+
+.rbc-time-content {
+  border-top: none !important;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+.rbc-time-slot {
+  color: var(--text-tertiary) !important;
+  font-size: 12px !important;
+}
+
+.rbc-current-time-indicator {
+  background-color: var(--error-red) !important;
+  height: 2px !important;
+  z-index: 3 !important;
+}
+
+/* Month view styling */
+.rbc-month-view {
+  border: 1px solid var(--border-light) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: var(--surface-elevated) !important;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+.rbc-date-cell {
+  border-right: 1px solid var(--border-light) !important;
+}
+
+.rbc-date-cell:last-child {
+  border-right: none !important;
+}
+
+/* Week view styling */
+.rbc-time-header-content {
+  border-left: 1px solid var(--border-light) !important;
+}
+
+.rbc-time-header-cell {
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+/* Agenda view styling */
+.rbc-agenda-view {
+  border: 1px solid var(--border-light) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.rbc-agenda-view table {
+  background: var(--surface-elevated) !important;
+}
+
+.rbc-agenda-time-cell,
+.rbc-agenda-event-cell,
+.rbc-agenda-date-cell {
+  padding: 12px !important;
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 0 16px;
+  }
+  
+  .rbc-toolbar-label {
+    text-align: center !important;
+    font-size: 18px !important;
+  }
+  
+  .rbc-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .rbc-toolbar button {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .rbc-header {
+    padding: 12px 4px !important;
+    font-size: 10px !important;
+  }
+  
+  .rbc-event {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .rbc-toolbar button {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+  
+  .rbc-toolbar-label {
+    font-size: 16px !important;
+  }
+  
+  .rbc-date-cell {
+    padding: 4px !important;
+  }
+  
+  .rbc-event {
+    font-size: 10px !important;
+    padding: 3px 5px !important;
+  }
+}
+
+/* Loading animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Category-specific event colors */
+.rbc-event[data-category="Work"] {
+  background: linear-gradient(135deg, var(--calendar-work) 0%, #0284c7 100%) !important;
+}
+
+.rbc-event[data-category="Personal"] {
+  background: linear-gradient(135deg, var(--calendar-personal) 0%, #db2777 100%) !important;
+}
+
+.rbc-event[data-category="Family"] {
+  background: linear-gradient(135deg, var(--calendar-family) 0%, #059669 100%) !important;
+}
+
+.rbc-event[data-category="Social"] {
+  background: linear-gradient(135deg, var(--calendar-social) 0%, #7c3aed 100%) !important;
+}
+
+/* Default event color */
+.rbc-event:not([data-category]) {
+  background: linear-gradient(135deg, var(--calendar-default) 0%, var(--indigo) 100%) !important;
+}
+
+/* Focus and accessibility */
+.rbc-toolbar button:focus,
+.rbc-event:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.5) !important;
+  outline-offset: 2px !important;
 }

@@ -17,12 +17,14 @@ export default function CalendarPage() {
   const { openModal } = useContext(ModalContext);
   const { getCalendarEvents } = CalendarApi.getAsync();
   const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   /**
    * Fetch and format calendar events for react-big-calendar
    */
   async function refreshEvents() {
     try {
+      setIsLoading(true);
       const fetchedEvents = await getCalendarEvents();
 
       const formattedEvents = fetchedEvents.map((event) => ({
@@ -39,6 +41,9 @@ export default function CalendarPage() {
       setEvents(formattedEvents);
     } catch (error) {
       toast.error("Error fetching events");
+      console.error("Calendar events fetch error:", error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -62,24 +67,102 @@ export default function CalendarPage() {
 
   return (
     <div className="calendar-page-container">
-      <Header title={"Reminders"} />
-      <div className="dashboard-header">
-        <div className="button-container">
-          <button className="button-primary" onClick={handleOpenCreateModal}>
-            <i className="fas fa-plus"></i>&nbsp;Add Event
-          </button>
-          <button className="button-secondary" onClick={handleOpenImportModal}>
-            <i className="fas fa-upload"></i>&nbsp;Import Events
-          </button>
+      <Header title="Daily Reminders" />
+      
+      <div className="calendar-content">
+        <div className="dashboard-header">
+          <div className="calendar-title-section">
+            <h2 className="calendar-page-title">Your Schedule</h2>
+            <p className="calendar-page-subtitle">
+              Manage your appointments and reminders
+            </p>
+          </div>
+          
+          <div className="button-container">
+            <button 
+              className="action-button button-primary" 
+              onClick={handleOpenCreateModal}
+              aria-label="Add new calendar event"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                width="18"
+                height="18"
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Event
+            </button>
+            
+            <button 
+              className="action-button button-secondary" 
+              onClick={handleOpenImportModal}
+              aria-label="Import calendar events"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                width="18"
+                height="18"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7,10 12,15 17,10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Import Events
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <CalendarComponent
-          events={events}
-          setEvents={setEvents}
-          onEventUpdated={refreshEvents}
-        />
+        <div className="calendar-wrapper">
+          <div className="calendar-container">
+            {isLoading ? (
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '400px',
+                color: 'var(--text-secondary)'
+              }}>
+                <div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    width="32"
+                    height="32"
+                    style={{ animation: 'spin 1s linear infinite', marginBottom: '12px' }}
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  <p>Loading your calendar...</p>
+                </div>
+              </div>
+            ) : (
+              <CalendarComponent
+                events={events}
+                setEvents={setEvents}
+                onEventUpdated={refreshEvents}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
