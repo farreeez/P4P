@@ -1,64 +1,301 @@
+:root {
+  --primary-blue: #3b82f6;
+  --primary-blue-hover: #2563eb;
+  --primary-orange: #ff6b00;
+  --primary-orange-hover: #ff8124;
+  --error-red: #ef4444;
+  --error-red-hover: #dc2626;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 .app-header {
-  background-color: #3b82f6;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #4f46e5 100%);
   color: white;
-  padding: 16px;
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 100;
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 35px;
-  font-weight: bold;
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .font-buttons-container {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  align-items: center;
 }
 
 .font-button {
-  margin: 0px 5px;
   color: white;
-  width: 50px;
-  aspect-ratio: 1/1;
-  background-color: #ff6b00;
-  font-size: 40px;
-  border-radius: 8px;
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #f97316 100%);
+  font-size: 24px;
+  font-weight: 600;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.font-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .font-button:hover {
-  background-color: #ff8124;
+  background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #ea580c 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.font-button:hover::before {
+  opacity: 1;
+}
+
+.font-button:active {
+  transform: translateY(0);
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
-.back-button {
+.header-button {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #ff6b00;
-  color: white;
   border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: var(--adjustable-font-size);
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: var(--adjustable-font-size, 16px);
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.header-button:hover::before {
+  opacity: 1;
+}
+
+.header-button svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.header-button:hover svg {
+  transform: scale(1.1);
+}
+
+.header-button:active {
+  transform: translateY(1px);
+}
+
+.back-button {
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #f97316 100%);
+  color: white;
 }
 
 .back-button:hover {
-  background-color: #ff8124;
+  background: linear-gradient(135deg, var(--primary-orange-hover) 0%, #ea580c 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.back-button svg {
-  width: 24px;
-  height: 24px;
+.logout-button {
+  background: linear-gradient(135deg, var(--error-red) 0%, #dc2626 100%);
+  color: white;
+}
+
+.logout-button:hover {
+  background: linear-gradient(135deg, var(--error-red-hover) 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Enhanced button animations */
+@keyframes buttonPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.header-button:active {
+  animation: buttonPress 0.1s ease;
+}
+
+.font-button:active {
+  animation: buttonPress 0.1s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 16px 20px;
+  }
+  
+  .app-header h1 {
+    font-size: 28px;
+  }
+  
+  .font-button {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+  
+  .header-button {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  
+  .header-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .font-buttons-container {
+    gap: 8px;
+  }
+  
+  .header-left {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .app-header h1 {
+    font-size: 24px;
+    order: 1;
+    width: 100%;
+  }
+  
+  .header-left {
+    order: 2;
+    gap: 8px;
+  }
+  
+  .font-buttons-container {
+    order: 3;
+    gap: 6px;
+  }
+  
+  .font-button {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+  
+  .header-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .header-button svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* Stack buttons vertically on very small screens */
+  .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Accessibility improvements */
+.header-button:focus,
+.font-button:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Dark mode support preparation */
+@media (prefers-color-scheme: dark) {
+  .app-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  }
+  
+  .app-header h1 {
+    background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Loading state for buttons */
+.header-button:disabled,
+.font-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.header-button:disabled:hover,
+.font-button:disabled:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
 }

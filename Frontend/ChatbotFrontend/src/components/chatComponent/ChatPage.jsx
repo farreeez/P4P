@@ -82,6 +82,7 @@ export default function ChatPage() {
       setPlayingIndex(null);
     }
   };
+
   const handleMicClick = async () => {
     if (!isRecording) {
       try {
@@ -218,7 +219,7 @@ export default function ChatPage() {
     writeString(8, "WAVE");
     writeString(12, "fmt ");
     view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true); // PCM format
+    view.setUint32(20, 1, true); // PCM format
     view.setUint16(22, 1, true); // Mono channel
     view.setUint32(24, sampleRate, true); // 16000 Hz sample rate
     view.setUint32(28, sampleRate * 2, true); // Byte rate
@@ -241,12 +242,14 @@ export default function ChatPage() {
 
   return (
     <div className="chat-container">
-      <Header title="ChatBot" />
+      <Header title="AI Assistant" />
       <div className="messages-container">
         <div className="messages-list">
           {chatMessages.length === 0 ? (
             <div className="empty-chat-message">
-              Send a message to start chatting!
+              <strong>Welcome!</strong>
+              <br />
+              Start a conversation by typing a message below or using the microphone.
             </div>
           ) : (
             chatMessages.map((message, index) => (
@@ -257,34 +260,17 @@ export default function ChatPage() {
                     ? "user-message-wrapper"
                     : "bot-message-wrapper"
                 }`}
-                style={{ alignItems: "flex-end" }}
               >
-                {/* Bot play button outside the bubble */}
+                {/* Bot play button with enhanced styling */}
                 {message.sender === "bot" && !message.isError && (
                   <button
-                    style={{
-                      marginRight: 8,
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      verticalAlign: "middle",
-                      padding: 0,
-                      outline: "none",
-                      alignSelf: "flex-start",
-                    }}
-                    title="Play message"
+                    className="play-button"
+                    title="Listen to message"
                     onClick={() => handlePlayTTS(message.text, index)}
                     disabled={playingIndex === index}
+                    aria-label={playingIndex === index ? "Playing message" : "Play message"}
                   >
-                    {playingIndex === index ? (
-                      <span role="img" aria-label="Playing">
-                        🔊
-                      </span>
-                    ) : (
-                      <span role="img" aria-label="Play">
-                        ▶️
-                      </span>
-                    )}
+                    {playingIndex === index ? "🔊" : "▶️"}
                   </button>
                 )}
                 <div
@@ -318,41 +304,60 @@ export default function ChatPage() {
 
       <div className="input-container">
         <div className="input-wrapper">
-          <input
-            type="text"
+          <textarea
             value={input}
             onChange={handleInputChange}
-            onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
-            placeholder="Type your message here..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
             className="message-input"
+            rows="1"
+            style={{
+              resize: "none",
+              overflow: "hidden",
+              minHeight: "24px",
+              height: "auto",
+            }}
+            onInput={(e) => {
+              // Auto-resize textarea
+              e.target.style.height = "auto";
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+            }}
           />
           <button
             type="button"
             onClick={handleMicClick}
             disabled={isLoading}
-            className="button-primary"
-            style={{
-              backgroundColor: isRecording ? "#ef4444" : undefined,
-              marginRight: 8,
-            }}
-            title={isRecording ? "Stop Recording" : "Start Recording"}
+            className={`action-button mic-button ${isRecording ? "recording" : ""}`}
+            title={isRecording ? "Stop Recording" : "Start Voice Recording"}
+            aria-label={isRecording ? "Stop recording" : "Start voice recording"}
           >
-            {isRecording ? (
-              <span role="img" aria-label="Stop Recording">
-                ⏹️
-              </span>
-            ) : (
-              <span role="img" aria-label="Record">
-                🎤
-              </span>
-            )}
+            {isRecording ? "⏹️" : "🎤"}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isLoading || !input.trim()}
-            className="button-primary"
+            className="action-button send-button"
+            title="Send Message"
+            aria-label="Send message"
           >
-            Send
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22,2 15,22 11,13 2,9"></polygon>
+            </svg>
           </button>
         </div>
       </div>
