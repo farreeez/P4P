@@ -3,17 +3,26 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel.Connectors.Google;
 using Microsoft.Extensions.AI;
+using System.ComponentModel;
+using System.Text.Json;
+using ChatbotBackend.Model;
+using ChatbotBackend.Repositories;
 
 public class LLMService
 {
+    private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatService;
     private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
+    private readonly ICalendarRepository _calendarRepository;
+    private readonly IUserRepository _userRepository;
     private readonly string _apiKey;
     private readonly string _modelId;
     private readonly string _embeddingModelId;
 
-    public LLMService(IConfiguration configuration)
+    public LLMService(IConfiguration configuration, ICalendarRepository calendarRepository, IUserRepository userRepository)
     {
+        _calendarRepository = calendarRepository;
+        _userRepository = userRepository;
         _apiKey = configuration["GoogleGenerativeAI:ApiKey"];
         _modelId = configuration["GoogleGenerativeAI:ModelId"];
         _embeddingModelId = configuration["GoogleGenerativeAI:EmbeddingModelId"] ?? _modelId;
@@ -26,55 +35,80 @@ public class LLMService
         {
             throw new InvalidOperationException("Google Generative AI Model ID for chat is missing or incomplete.");
         }
-        if (string.IsNullOrEmpty(_embeddingModelId))
-        {
-            throw new InvalidOperationException("Google Generative AI Embedding Model ID is missing or incomplete.");
-        }
 
-        IKernelBuilder chatKernelBuilder = Kernel.CreateBuilder()
-                                                  .AddGoogleAIGeminiChatCompletion(
-                                                      modelId: _modelId,
-                                                      apiKey: _apiKey);
-        Kernel chatKernel = chatKernelBuilder.Build();
-        _chatService = chatKernel.GetRequiredService<IChatCompletionService>();
+        // Create kernel with calendar functions
+        var kernelBuilder = Kernel.CreateBuilder()
+            .AddGoogleAIGeminiChatCompletion(
+                modelId: _modelId,
+                apiKey: _apiKey);
+        
+        _kernel = kernelBuilder.Build();
+        
+        // Add calendar functions to the kernel
+        _kernel.Plugins.AddFromObject(new CalendarFunctions(_calendarRepository, _userRepository));
+        
+        _chatService = _kernel.GetRequiredService<IChatCompletionService>();
 
+        // Setup embedding service
         IKernelBuilder embeddingKernelBuilder = Kernel.CreateBuilder()
-                                                      .AddGoogleAIEmbeddingGenerator(
-                                                          modelId: _embeddingModelId,
-                                                          apiKey: _apiKey);
+            .AddGoogleAIEmbeddingGenerator(
+                modelId: _embeddingModelId,
+                apiKey: _apiKey);
         Kernel embeddingKernel = embeddingKernelBuilder.Build();
         _embeddingGenerator = embeddingKernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
     }
 
     /// <summary>
-    /// Gets a response from the LLM based on user message using chat completion.
+    /// Gets a response from the LLM with calendar function calling support.
     /// </summary>
     /// <param name="userMessage">The user's input message.</param>
+    /// <param name="userId">The current user's ID for calendar operations.</param>
     /// <returns>The LLM's response content.</returns>
-    public async Task<string> GetLLMResponseAsync(string userMessage)
+    public async Task<string> GetLLMResponseAsync(string userMessage, string userId = null)
     {
         var chatHistory = new ChatHistory();
+        
+        // Add system message with context about calendar capabilities
+        chatHistory.AddSystemMessage($@"
+You are a helpful AI assistant with calendar management capabilities. You can help users with:
+
+1. Creating calendar events
+2. Viewing their upcoming events
+3. Updating existing events
+4. Deleting events
+5. Searching for events
+
+Current user ID: {userId ?? "unknown"}
+
+When users ask about calendar-related tasks, use the appropriate functions to help them. 
+Always be helpful and provide clear confirmation of actions taken.
+Format dates and times in a user-friendly way.
+
+For creating events, if the user doesn't specify all details:
+- Default start time to the next reasonable hour
+- Default duration to 1 hour if not specified
+- Default category to 'Personal' if not specified
+- Ask for clarification if the date/time is ambiguous
+
+When searching or listing events, format them nicely with emojis and clear formatting.
+");
+        
         chatHistory.AddUserMessage(userMessage);
 
         var executionSettings = new GeminiPromptExecutionSettings
         {
             MaxTokens = 25600,
-            // Temperature = 0.7,
-            // TopP = 0.9,
-            // TopK = 40,
-            // ThinkingConfig = new() { ThinkingBudget = 2000 }
+            ToolCallBehavior = GeminiToolCallBehavior.AutoInvokeKernelFunctions
         };
 
         try
         {
-            var result = await _chatService.GetChatMessageContentAsync(chatHistory, executionSettings);
-
-            if (result == null)
-            {
-                return string.Empty;
-            }
-
-            return result?.Content;
+            var result = await _chatService.GetChatMessageContentAsync(
+                chatHistory, 
+                executionSettings, 
+                kernel: _kernel);
+            
+            return result?.Content ?? "I apologize, but I couldn't process your request at the moment.";
         }
         catch (Exception ex)
         {
@@ -93,7 +127,6 @@ public class LLMService
     public async Task<string> GetLLMResponseWithContextAsync(string userMessage, string context)
     {
         var chatHistory = new ChatHistory();
-
         chatHistory.AddSystemMessage($"Here is some relevant information for your query: {context}");
         chatHistory.AddUserMessage(userMessage);
 
@@ -105,13 +138,7 @@ public class LLMService
         try
         {
             var result = await _chatService.GetChatMessageContentAsync(chatHistory, executionSettings);
-
-            if (result == null)
-            {
-                return string.Empty;
-            }
-
-            return result?.Content;
+            return result?.Content ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -130,7 +157,6 @@ public class LLMService
         try
         {
             var embeddings = await _embeddingGenerator.GenerateAsync([text]);
-
             Console.WriteLine($"Generated '{embeddings.Count}' embedding(s) with '{embeddings[0].Vector.Length}' dimensions (default) for the provided text");
             return embeddings;
         }
@@ -162,10 +188,7 @@ public class LLMService
         try
         {
             var embeddings = await customEmbeddingGenerator.GenerateAsync([text]);
-
             Console.WriteLine($"Generated '{embeddings.Count}' embedding(s) with '{embeddings[0].Vector.Length}' dimensions (custom: '{customDimensions}') for the provided text");
-
-
             return embeddings;
         }
         catch (Exception ex)
@@ -275,5 +298,234 @@ public class LLMService
         This content is for general informational purposes and should not replace professional medical advice. Always consult with a healthcare professional for diagnosis and treatment.
         ";
         return await GenerateEmbeddingWithDefaultDimensionsAsync(brainHealthText);
+    }
+}
+
+/// <summary>
+/// Calendar functions that the LLM can call
+/// </summary>
+public class CalendarFunctions
+{
+    private readonly ICalendarRepository _calendarRepository;
+    private readonly IUserRepository _userRepository;
+
+    public CalendarFunctions(ICalendarRepository calendarRepository, IUserRepository userRepository)
+    {
+        _calendarRepository = calendarRepository;
+        _userRepository = userRepository;
+    }
+
+    [KernelFunction("create_calendar_event")]
+    [Description("Creates a new calendar event for the user")]
+    public async Task<string> CreateCalendarEvent(
+        [Description("Name/title of the event")] string eventName,
+        [Description("Description of the event")] string eventDescription,
+        [Description("Date of the event in ISO format (YYYY-MM-DD)")] string eventDate,
+        [Description("Start time in ISO format (YYYY-MM-DDTHH:mm:ss)")] string startTime,
+        [Description("End time in ISO format (YYYY-MM-DDTHH:mm:ss)")] string endTime,
+        [Description("Category: Work, Personal, Family, Social, Health, or Other")] string category,
+        [Description("User ID")] string userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return "Error: User not found.";
+            }
+
+            var newEvent = new Calendar
+            {
+                EventName = eventName,
+                EventDescription = eventDescription,
+                EventDate = DateTime.Parse(eventDate),
+                StartTime = DateTime.Parse(startTime),
+                EndTime = DateTime.Parse(endTime),
+                Category = category,
+                UserId = userId
+            };
+
+            var createdEvent = await _calendarRepository.CreateAsync(newEvent);
+            user.CalendarItems.Add(createdEvent.Id!);
+            await _userRepository.UpdateAsync(user);
+
+            return $"✅ Successfully created event '{eventName}' on {DateTime.Parse(eventDate):MMMM d, yyyy} from {DateTime.Parse(startTime):h:mm tt} to {DateTime.Parse(endTime):h:mm tt}.";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error creating event: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("get_user_events")]
+    [Description("Gets all calendar events for a user")]
+    public async Task<string> GetUserEvents([Description("User ID")] string userId)
+    {
+        try
+        {
+            var events = await _calendarRepository.GetByUserIdAsync(userId);
+            var eventsList = events.ToList();
+            
+            if (!eventsList.Any())
+            {
+                return "📅 You don't have any calendar events scheduled.";
+            }
+
+            var response = "📅 Your upcoming events:\n\n";
+            foreach (var evt in eventsList.OrderBy(e => e.StartTime))
+            {
+                response += $"• **{evt.EventName}** ({evt.Category})\n";
+                response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
+                response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n";
+                response += $"  📝 {evt.EventDescription}\n\n";
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error retrieving events: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("get_upcoming_events")]
+    [Description("Gets upcoming/unfinished calendar events for a user")]
+    public async Task<string> GetUpcomingEvents([Description("User ID")] string userId)
+    {
+        try
+        {
+            var events = await _calendarRepository.GetUnfinishedEventsByUserIdAsync(userId);
+            var eventsList = events.ToList();
+            
+            if (!eventsList.Any())
+            {
+                return "📅 You don't have any upcoming events.";
+            }
+
+            var response = "📅 Your upcoming events:\n\n";
+            foreach (var evt in eventsList.OrderBy(e => e.StartTime).Take(5))
+            {
+                response += $"• **{evt.EventName}** ({evt.Category})\n";
+                response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
+                response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n";
+                response += $"  📝 {evt.EventDescription}\n\n";
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error retrieving upcoming events: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("update_calendar_event")]
+    [Description("Updates an existing calendar event")]
+    public async Task<string> UpdateCalendarEvent(
+        [Description("Event ID to update")] string eventId,
+        [Description("New name/title of the event")] string eventName,
+        [Description("New description of the event")] string eventDescription,
+        [Description("New date of the event in ISO format (YYYY-MM-DD)")] string eventDate,
+        [Description("New start time in ISO format (YYYY-MM-DDTHH:mm:ss)")] string startTime,
+        [Description("New end time in ISO format (YYYY-MM-DDTHH:mm:ss)")] string endTime,
+        [Description("New category: Work, Personal, Family, Social, Health, or Other")] string category)
+    {
+        try
+        {
+            var existingEvent = await _calendarRepository.GetByIdAsync(eventId);
+            if (existingEvent == null)
+            {
+                return "❌ Event not found.";
+            }
+
+            existingEvent.EventName = eventName;
+            existingEvent.EventDescription = eventDescription;
+            existingEvent.EventDate = DateTime.Parse(eventDate);
+            existingEvent.StartTime = DateTime.Parse(startTime);
+            existingEvent.EndTime = DateTime.Parse(endTime);
+            existingEvent.Category = category;
+
+            await _calendarRepository.UpdateAsync(existingEvent);
+
+            return $"✅ Successfully updated event '{eventName}' for {DateTime.Parse(eventDate):MMMM d, yyyy}.";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error updating event: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("delete_calendar_event")]
+    [Description("Deletes a calendar event")]
+    public async Task<string> DeleteCalendarEvent(
+        [Description("Event ID to delete")] string eventId,
+        [Description("User ID")] string userId)
+    {
+        try
+        {
+            var existingEvent = await _calendarRepository.GetByIdAsync(eventId);
+            if (existingEvent == null)
+            {
+                return "❌ Event not found.";
+            }
+
+            var eventName = existingEvent.EventName;
+            var deleted = await _calendarRepository.DeleteAsync(eventId);
+            
+            if (!deleted)
+            {
+                return "❌ Failed to delete event.";
+            }
+
+            // Remove from user's calendar items
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user != null)
+            {
+                user.CalendarItems.Remove(eventId);
+                await _userRepository.UpdateAsync(user);
+            }
+
+            return $"✅ Successfully deleted event '{eventName}'.";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error deleting event: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("search_events")]
+    [Description("Searches for calendar events by name or description")]
+    public async Task<string> SearchEvents(
+        [Description("User ID")] string userId,
+        [Description("Search term to look for in event names or descriptions")] string searchTerm)
+    {
+        try
+        {
+            var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
+            var matchingEvents = allEvents.Where(e => 
+                e.EventName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.EventDescription.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+
+            if (!matchingEvents.Any())
+            {
+                return $"🔍 No events found matching '{searchTerm}'.";
+            }
+
+            var response = $"🔍 Found {matchingEvents.Count} event(s) matching '{searchTerm}':\n\n";
+            foreach (var evt in matchingEvents.OrderBy(e => e.StartTime))
+            {
+                response += $"• **{evt.EventName}** (ID: {evt.Id})\n";
+                response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
+                response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n";
+                response += $"  📝 {evt.EventDescription}\n\n";
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error searching events: {ex.Message}";
+        }
     }
 }

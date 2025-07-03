@@ -2,13 +2,16 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import Header from "../shared/Header";
 import "./ChatPage.css";
 import { ChatApi } from "../../api/ChatApi";
-import { AppContext } from "../../contexts/AppContextProvider";
+import {
+  AppContext,
+  AppContextProvider,
+} from "../../contexts/AppContextProvider";
 import { TTS } from "../../api/ttsApi";
 import { playAudioFromBase64 } from "../../utils/audioPlayer";
 import { STT } from "../../api/sttApi";
 
 export default function ChatPage() {
-  const { chatMessages, setChatMessages } = useContext(AppContext);
+  const { chatMessages, setChatMessages, currentUser } = useContext(AppContext);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -49,7 +52,8 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const data = await sendMessage(userMessage.text);
+      // Pass the current user's ID to the chat API
+      const data = await sendMessage(userMessage.text, currentUser?.id);
       const botMessage = {
         text: data.response || "Sorry, I couldn't process that request.",
         sender: "bot",
@@ -249,7 +253,8 @@ export default function ChatPage() {
             <div className="empty-chat-message">
               <strong>Welcome!</strong>
               <br />
-              Start a conversation by typing a message below or using the microphone.
+              Start a conversation by typing a message below or using the
+              microphone.
             </div>
           ) : (
             chatMessages.map((message, index) => (
@@ -268,7 +273,11 @@ export default function ChatPage() {
                     title="Listen to message"
                     onClick={() => handlePlayTTS(message.text, index)}
                     disabled={playingIndex === index}
-                    aria-label={playingIndex === index ? "Playing message" : "Play message"}
+                    aria-label={
+                      playingIndex === index
+                        ? "Playing message"
+                        : "Play message"
+                    }
                   >
                     {playingIndex === index ? "🔊" : "▶️"}
                   </button>
@@ -325,16 +334,21 @@ export default function ChatPage() {
             onInput={(e) => {
               // Auto-resize textarea
               e.target.style.height = "auto";
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+              e.target.style.height =
+                Math.min(e.target.scrollHeight, 120) + "px";
             }}
           />
           <button
             type="button"
             onClick={handleMicClick}
             disabled={isLoading}
-            className={`action-button mic-button ${isRecording ? "recording" : ""}`}
+            className={`action-button mic-button ${
+              isRecording ? "recording" : ""
+            }`}
             title={isRecording ? "Stop Recording" : "Start Voice Recording"}
-            aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+            aria-label={
+              isRecording ? "Stop recording" : "Start voice recording"
+            }
           >
             {isRecording ? "⏹️" : "🎤"}
           </button>
