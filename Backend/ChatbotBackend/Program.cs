@@ -1,5 +1,5 @@
-using ChatbotBackend;
 using ChatbotBackend.Data;
+using ChatbotBackend.LLMServices;
 using ChatbotBackend.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +12,8 @@ builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register re
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
 builder.Services.AddSingleton<TextToSpeechService>(); // Add TTS service
 builder.Services.AddSingleton<SpeechToTextService>(); // Add this line
+builder.Services.AddSingleton<DementiaAssessmentService>();
+builder.Services.AddSingleton<ChatbotCoordinator>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
 // Register CognitiveActivityManager as a singleton (it manages state across sessions)

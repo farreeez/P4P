@@ -1,7 +1,7 @@
 using Google.Cloud.TextToSpeech.V1;
 using Google.Protobuf;
 
-namespace ChatbotBackend
+namespace ChatbotBackend.LLMServices
 {
     public class TextToSpeechService
     {
@@ -11,19 +11,19 @@ namespace ChatbotBackend
         public TextToSpeechService(ILogger<TextToSpeechService> logger, IConfiguration configuration)
         {
             _logger = logger;
-            
+
             try
             {
                 // Set environment variable for Google Cloud credentials
                 var keyFilePath = configuration["GoogleCloud:KeyFilePath"];
-                
+
                 if (!string.IsNullOrEmpty(keyFilePath))
                 {
                     if (!File.Exists(keyFilePath))
                     {
                         throw new FileNotFoundException($"Google Cloud service account key file not found at: {keyFilePath}");
                     }
-                    
+
                     // Set the environment variable that Google Cloud libraries expect
                     Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", keyFilePath);
                     _logger.LogInformation("Set GOOGLE_APPLICATION_CREDENTIALS to: {KeyFilePath}", keyFilePath);
@@ -174,16 +174,16 @@ namespace ChatbotBackend
             try
             {
                 var request = new ListVoicesRequest();
-                
+
                 if (!string.IsNullOrEmpty(languageCode))
                 {
                     request.LanguageCode = languageCode;
                 }
 
                 var response = await _client.ListVoicesAsync(request);
-                
+
                 _logger.LogInformation("Retrieved {Count} available voices", response.Voices.Count);
-                
+
                 return response.Voices;
             }
             catch (Exception ex)

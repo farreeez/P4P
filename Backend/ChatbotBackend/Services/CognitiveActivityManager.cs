@@ -1,4 +1,4 @@
-﻿namespace ChatbotBackend;
+﻿namespace ChatbotBackend.Services;
 
 // Example: Create a new class to manage game state and logic
 public class CognitiveActivityManager
