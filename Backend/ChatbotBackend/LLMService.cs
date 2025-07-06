@@ -54,6 +54,14 @@ public class LLMService
     public async Task<string> GetLLMResponseAsync(string userMessage)
     {
         var chatHistory = new ChatHistory();
+        // Add a system message to guide the LLM's behavior
+        chatHistory.AddSystemMessage(@"You are an AI assistant focused on brain health and dementia support.
+    You can provide information, answer questions, and facilitate cognitive stimulation activities.
+    If the user expresses interest in playing a brain game (e.g., 'memory game', 'puzzle', 'challenge my brain'),
+    suggest starting a specific activity. For example, you could say: 'I can help you with a memory recall activity! Say 'start memory recall activity' to begin
+        Otherwise, provide helpful and empathetic responses based on the user's query
+        ");
+    
         chatHistory.AddUserMessage(userMessage);
 
         var executionSettings = new GeminiPromptExecutionSettings
