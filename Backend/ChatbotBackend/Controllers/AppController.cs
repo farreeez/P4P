@@ -11,27 +11,36 @@ namespace ChatbotBackend.Controllers
 
         private readonly ILogger<AppController> _logger;
         private readonly LLMService _llmService;
+        private readonly ChatbotCoordinator _chatbotCoordinator;
 
-        public AppController(ILogger<AppController> logger, LLMService llmService)
+        public AppController(ILogger<AppController> logger, LLMService llmService, ChatbotCoordinator chatbotCoordinator)
         {
             _logger = logger;
             _llmService = llmService;
+            _chatbotCoordinator = chatbotCoordinator;
         }
 
         [HttpPost("Chat")]
         public async Task<IActionResult> PostChat([FromBody] ChatMessage message)
         {
-             if (!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-                
-            Console.WriteLine("works");
-            Console.WriteLine($"User: {message.Text}");
+
             if (string.IsNullOrWhiteSpace(message.Text))
             {
                 return BadRequest("Message is required.");
             }
 
-            var response = await _llmService.GetLLMResponseAsync(message.Text);
+            // You'll need a way to identify the user/session.
+            // For now, let's use a dummy ID or assume it comes from the message object.
+            // In a real app, this would be from authentication or a session ID.
+            string userId = "user123"; // Replace with actual user ID mechanism
+
+            Console.WriteLine($"User: {message.Text}");
+
+            // Route the message through the coordinator
+            var response = await _chatbotCoordinator.ProcessChatMessage(userId, message.Text);
+
             Console.WriteLine($"Chatbot: {response}");
             return Ok(new { response });
         }
