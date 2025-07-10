@@ -1,5 +1,5 @@
-using ChatbotBackend;
 using ChatbotBackend.Data;
+using ChatbotBackend.LLMServices;
 using ChatbotBackend.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +18,19 @@ builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>();
 // Register LLMService AFTER repositories (so dependency injection can resolve them)
 builder.Services.AddSingleton<LLMService>();
 
-// Register other services
-builder.Services.AddSingleton<TextToSpeechService>();
-builder.Services.AddSingleton<SpeechToTextService>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
+builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
+builder.Services.AddSingleton<TextToSpeechService>(); // Add TTS service
+builder.Services.AddSingleton<SpeechToTextService>(); // Add this line
+builder.Services.AddSingleton<DementiaAssessmentService>();
+builder.Services.AddSingleton<ChatbotCoordinator>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>(); // Register repository with interface
+builder.Services.AddSingleton<ICalendarRepository, CalendarRepository>(); // Add calendar repository
+// Register CognitiveActivityManager as a singleton (it manages state across sessions)
+builder.Services.AddSingleton<CognitiveActivityManager>();
+
+// Register ChatbotCoordinator, which depends on LLMService and CognitiveActivityManager
+builder.Services.AddScoped<ChatbotCoordinator>(); // Or Singleton if state is managed elsewhere
 
 // Add DbContext configuration
 builder.Services.AddDbContext<MyDbContext>(options =>

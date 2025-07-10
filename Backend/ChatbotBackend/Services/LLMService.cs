@@ -41,12 +41,12 @@ public class LLMService
             .AddGoogleAIGeminiChatCompletion(
                 modelId: _modelId,
                 apiKey: _apiKey);
-        
+
         _kernel = kernelBuilder.Build();
-        
+
         // Add calendar functions to the kernel
         _kernel.Plugins.AddFromObject(new CalendarFunctions(_calendarRepository, _userRepository));
-        
+
         _chatService = _kernel.GetRequiredService<IChatCompletionService>();
 
         // Setup embedding service
@@ -64,15 +64,17 @@ public class LLMService
     /// <param name="userMessage">The user's input message.</param>
     /// <param name="userId">The current user's ID for calendar operations.</param>
     /// <returns>The LLM's response content.</returns>
-    public async Task<string> GetLLMResponseAsync(string userMessage, string userId = null)
+    public async Task<string> GetLLMResponseAsync(string userMessage, string userId)
     {
         var chatHistory = new ChatHistory();
-        
         // Add system message with context about calendar capabilities
         var currentDateTime = DateTime.Now;
         chatHistory.AddSystemMessage($@"
-You are a helpful AI assistant with calendar management capabilities. You can help users with:
+# Combined AI Assistant System Prompt
 
+You are a helpful AI assistant with both calendar management capabilities and brain health/dementia support features. You can help users with:
+
+## Calendar Management Capabilities
 PLEASE ONLY MENTION THAT YOU CAN HELP WITH CALENDAR CAPABILITIES ONLY IF THEY ASK FOR SOMETHING RELATED TO CALENDAR EVENTS.
 
 1. Creating calendar events
@@ -81,34 +83,47 @@ PLEASE ONLY MENTION THAT YOU CAN HELP WITH CALENDAR CAPABILITIES ONLY IF THEY AS
 4. Deleting events
 5. Searching for events
 
-Current user ID: {userId ?? "unknown"}
+**Current user ID:** {userId ?? "unknown"}
 
-When users ask about calendar-related tasks, use the appropriate functions to help them. 
+When users ask about calendar-related tasks, use the appropriate functions to help them.
 Always be helpful and provide clear confirmation of actions taken.
 Format dates and times in a user-friendly way.
 
-If a user is editing or creating an event and did not mention all of the inputs can you try to infer the category and description if it is easy to guess what they likely are to make a more seamless user experience.
+If a user is editing or creating an event and did not mention all of the inputs, try to infer the category and description if it is easy to guess what they likely are to make a more seamless user experience.
+
 Make sure to ask what time the event is if it is not mentioned as it is important to make sure the user chooses the time for the event.
 
-If a user asks you to add something to their schedule calendar routine or anything along their lines assume they want you to add an event there is no need to ask them to specify if they want you to add an event.
+If a user asks you to add something to their schedule, calendar, routine, or anything along those lines, assume they want you to add an event - there is no need to ask them to specify if they want you to add an event.
 
-For creating events, if the user doesn't specify all details:
+### For creating events, if the user doesn't specify all details:
 - Default start time to the next reasonable hour
 - Default duration to 1 hour if not specified
 - Default category to 'Personal' if not specified
 - Ask for clarification if the date/time is ambiguous
 
-IMPORTANT CONTEXT:
-- Current date and time: {currentDateTime:yyyy-MM-dd HH:mm:ss} ({currentDateTime:dddd, MMMM d, yyyy})
-- Current user ID: {userId ?? "unknown"}
-- Today is: {currentDateTime:dddd, MMMM d, yyyy}
-- Current time: {currentDateTime:HH:mm}
+## Brain Health & Dementia Support
+You can provide information, answer questions, and facilitate cognitive stimulation activities.
 
-Remember: Today is {currentDateTime:dddd, MMMM d, yyyy} - use this for all relative dates so if they say tomorrow it is the next day etc. 
+If the user expresses interest in playing a brain game (e.g., 'memory game', 'puzzle', 'challenge my brain'), suggest starting a specific activity. For example, you could say: 'I can help you with a memory recall activity! Say 'start memory recall activity' to begin.'
 
-When searching or listing events, format them nicely with emojis and clear formatting.
+Otherwise, provide helpful and empathetic responses based on the user's query.
+
+## Important Context
+- **Current date and time:** {currentDateTime:yyyy-MM-dd HH:mm:ss} ({currentDateTime:dddd, MMMM d, yyyy})
+- **Current user ID:** {userId ?? "unknown"}
+- **Today is:** {currentDateTime:dddd, MMMM d, yyyy}
+- **Current time:** {currentDateTime:HH:mm}
+
+**Remember:** Today is {currentDateTime:dddd, MMMM d, yyyy} - use this for all relative dates so if they say tomorrow it is the next day etc.
+
+## General Guidelines
+- When searching or listing events, format them nicely with emojis and clear formatting
+- Provide helpful and empathetic responses for brain health queries
+- Be supportive and understanding when working with users who may have cognitive challenges
+- Always be helpful and provide clear confirmation of actions taken
+- Seamlessly transition between calendar management and brain health support based on user needs
 ");
-        
+
         chatHistory.AddUserMessage(userMessage);
 
         var executionSettings = new GeminiPromptExecutionSettings
@@ -120,10 +135,10 @@ When searching or listing events, format them nicely with emojis and clear forma
         try
         {
             var result = await _chatService.GetChatMessageContentAsync(
-                chatHistory, 
-                executionSettings, 
+                chatHistory,
+                executionSettings,
                 kernel: _kernel);
-            
+
             return result?.Content ?? "I apologize, but I couldn't process your request at the moment.";
         }
         catch (Exception ex)
@@ -148,7 +163,7 @@ When searching or listing events, format them nicely with emojis and clear forma
 
         var executionSettings = new GeminiPromptExecutionSettings
         {
-            MaxTokens = 5120, 
+            MaxTokens = 5120,
         };
 
         try
@@ -342,7 +357,7 @@ public class CalendarFunctions
         {
             var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
             var eventsList = allEvents.ToList();
-            
+
             if (!eventsList.Any())
             {
                 return "📅 You don't have any calendar events to search through.";
@@ -370,10 +385,10 @@ public class CalendarFunctions
             }).OrderByDescending(x => x.TotalScore).ToList();
 
             var bestMatch = scoredEvents.First();
-            
+
             // Set threshold for "good enough" match
             const double threshold = 0.3;
-            
+
             if (bestMatch.TotalScore < threshold)
             {
                 // No good match found, show all events for user to choose
@@ -390,7 +405,7 @@ public class CalendarFunctions
             // Show the best match and ask for confirmation
             var matchedEvent = bestMatch.Event;
             var confidence = (bestMatch.TotalScore * 100).ToString("F0");
-            
+
             return $@"🎯 Best match found ({confidence}% confidence):
 
 • **{matchedEvent.EventName}** (ID: {matchedEvent.Id})
@@ -423,7 +438,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
         {
             var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
             var eventsList = allEvents.ToList();
-            
+
             if (!eventsList.Any())
             {
                 return "📅 You don't have any calendar events to update.";
@@ -439,14 +454,14 @@ Is this the event you want to modify? If so, I can help you update or delete it.
 
             var bestMatch = scoredEvents.First();
             const double threshold = 0.3;
-            
+
             if (bestMatch.TotalScore < threshold)
             {
                 return $"❌ Could not find a good match for '{searchText}'. Please use 'find_best_matching_event' first to see available events.";
             }
 
             var eventToUpdate = bestMatch.Event;
-            
+
             // Update only the provided fields, keep existing values for others
             var updatedEvent = new Calendar
             {
@@ -481,7 +496,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
         {
             var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
             var eventsList = allEvents.ToList();
-            
+
             if (!eventsList.Any())
             {
                 return "📅 You don't have any calendar events to delete.";
@@ -503,7 +518,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
 
             var bestMatch = scoredEvents.First();
             const double threshold = 0.3;
-            
+
             if (bestMatch.TotalScore < threshold)
             {
                 return $"❌ Could not find a good match for '{searchText}'. Please use 'find_best_matching_event' first to see available events.";
@@ -512,7 +527,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
             var eventToDelete = bestMatch.Event;
             var eventName = eventToDelete.EventName;
             var deleted = await _calendarRepository.DeleteAsync(eventToDelete.Id);
-            
+
             if (!deleted)
             {
                 return "❌ Failed to delete event.";
@@ -551,10 +566,10 @@ Is this the event you want to modify? If so, I can help you update or delete it.
 
         // Levenshtein distance similarity
         var levenshteinSimilarity = 1.0 - (double)LevenshteinDistance(source, target) / Math.Max(source.Length, target.Length);
-        
+
         // Jaccard similarity (word-based)
         var jaccardSimilarity = CalculateJaccardSimilarity(source, target);
-        
+
         // Combine both metrics
         return (levenshteinSimilarity * 0.6) + (jaccardSimilarity * 0.4);
     }
@@ -597,15 +612,15 @@ Is this the event you want to modify? If so, I can help you update or delete it.
     {
         var sourceWords = source.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
         var targetWords = target.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
-        
+
         var intersection = sourceWords.Intersect(targetWords).Count();
         var union = sourceWords.Union(targetWords).Count();
-        
+
         return union == 0 ? 0 : (double)intersection / union;
     }
 
     // ... Keep all your existing functions (create_calendar_event, get_user_events, etc.)
-    
+
     [KernelFunction("create_calendar_event")]
     [Description("Creates a new calendar event for the user")]
     public async Task<string> CreateCalendarEvent(
@@ -656,7 +671,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
         {
             var events = await _calendarRepository.GetByUserIdAsync(userId);
             var eventsList = events.ToList();
-            
+
             if (!eventsList.Any())
             {
                 return "📅 You don't have any calendar events scheduled.";
@@ -687,7 +702,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
         {
             var events = await _calendarRepository.GetUnfinishedEventsByUserIdAsync(userId);
             var eventsList = events.ToList();
-            
+
             if (!eventsList.Any())
             {
                 return "📅 You don't have any upcoming events.";
@@ -762,7 +777,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
 
             var eventName = existingEvent.EventName;
             var deleted = await _calendarRepository.DeleteAsync(eventId);
-            
+
             if (!deleted)
             {
                 return "❌ Failed to delete event.";
@@ -793,7 +808,7 @@ Is this the event you want to modify? If so, I can help you update or delete it.
         try
         {
             var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
-            var matchingEvents = allEvents.Where(e => 
+            var matchingEvents = allEvents.Where(e =>
                 e.EventName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                 e.EventDescription.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
             ).ToList();
