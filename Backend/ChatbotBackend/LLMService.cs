@@ -331,6 +331,281 @@ public class CalendarFunctions
         _userRepository = userRepository;
     }
 
+    [KernelFunction("find_best_matching_event")]
+    [Description("Finds the best matching event based on partial or misspelled event name/description")]
+    public async Task<string> FindBestMatchingEvent(
+        [Description("User ID")] string userId,
+        [Description("Partial or potentially misspelled event name or description")] string searchText,
+        [Description("Optional: date filter in YYYY-MM-DD format")] string dateFilter = null)
+    {
+        try
+        {
+            var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
+            var eventsList = allEvents.ToList();
+            
+            if (!eventsList.Any())
+            {
+                return "📅 You don't have any calendar events to search through.";
+            }
+
+            // Filter by date if provided
+            if (!string.IsNullOrEmpty(dateFilter) && DateTime.TryParse(dateFilter, out DateTime filterDate))
+            {
+                eventsList = eventsList.Where(e => e.EventDate.Date == filterDate.Date).ToList();
+                if (!eventsList.Any())
+                {
+                    return $"📅 No events found for {filterDate:MMMM d, yyyy}.";
+                }
+            }
+
+            // Calculate similarity scores for each event
+            var scoredEvents = eventsList.Select(evt => new
+            {
+                Event = evt,
+                NameScore = CalculateSimilarity(searchText.ToLower(), evt.EventName.ToLower()),
+                DescriptionScore = CalculateSimilarity(searchText.ToLower(), evt.EventDescription.ToLower()),
+                // Combine scores with name weighted higher
+                TotalScore = (CalculateSimilarity(searchText.ToLower(), evt.EventName.ToLower()) * 0.7) +
+                           (CalculateSimilarity(searchText.ToLower(), evt.EventDescription.ToLower()) * 0.3)
+            }).OrderByDescending(x => x.TotalScore).ToList();
+
+            var bestMatch = scoredEvents.First();
+            
+            // Set threshold for "good enough" match
+            const double threshold = 0.3;
+            
+            if (bestMatch.TotalScore < threshold)
+            {
+                // No good match found, show all events for user to choose
+                var response = $"🔍 No close match found for '{searchText}'. Here are your available events:\n\n";
+                foreach (var evt in eventsList.OrderBy(e => e.StartTime))
+                {
+                    response += $"• **{evt.EventName}** (ID: {evt.Id})\n";
+                    response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
+                    response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n\n";
+                }
+                return response;
+            }
+
+            // Show the best match and ask for confirmation
+            var matchedEvent = bestMatch.Event;
+            var confidence = (bestMatch.TotalScore * 100).ToString("F0");
+            
+            return $@"🎯 Best match found ({confidence}% confidence):
+
+• **{matchedEvent.EventName}** (ID: {matchedEvent.Id})
+  📅 {matchedEvent.EventDate:MMMM d, yyyy}
+  🕐 {matchedEvent.StartTime:h:mm tt} - {matchedEvent.EndTime:h:mm tt}
+  📝 {matchedEvent.EventDescription}
+  🏷️ Category: {matchedEvent.Category}
+
+Is this the event you want to modify? If so, I can help you update or delete it.";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error finding matching event: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("smart_update_event")]
+    [Description("Updates an event by finding the best match for a partial/misspelled name, then updating it")]
+    public async Task<string> SmartUpdateEvent(
+        [Description("User ID")] string userId,
+        [Description("Partial or potentially misspelled event name to find")] string searchText,
+        [Description("New name/title of the event (optional)")] string newEventName = null,
+        [Description("New description of the event (optional)")] string newEventDescription = null,
+        [Description("New date of the event in ISO format (optional)")] string newEventDate = null,
+        [Description("New start time in ISO format (optional)")] string newStartTime = null,
+        [Description("New end time in ISO format (optional)")] string newEndTime = null,
+        [Description("New category (optional)")] string newCategory = null)
+    {
+        try
+        {
+            var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
+            var eventsList = allEvents.ToList();
+            
+            if (!eventsList.Any())
+            {
+                return "📅 You don't have any calendar events to update.";
+            }
+
+            // Find best matching event
+            var scoredEvents = eventsList.Select(evt => new
+            {
+                Event = evt,
+                TotalScore = (CalculateSimilarity(searchText.ToLower(), evt.EventName.ToLower()) * 0.7) +
+                           (CalculateSimilarity(searchText.ToLower(), evt.EventDescription.ToLower()) * 0.3)
+            }).OrderByDescending(x => x.TotalScore).ToList();
+
+            var bestMatch = scoredEvents.First();
+            const double threshold = 0.3;
+            
+            if (bestMatch.TotalScore < threshold)
+            {
+                return $"❌ Could not find a good match for '{searchText}'. Please use 'find_best_matching_event' first to see available events.";
+            }
+
+            var eventToUpdate = bestMatch.Event;
+            
+            // Update only the provided fields, keep existing values for others
+            var updatedEvent = new Calendar
+            {
+                Id = eventToUpdate.Id,
+                EventName = newEventName ?? eventToUpdate.EventName,
+                EventDescription = newEventDescription ?? eventToUpdate.EventDescription,
+                EventDate = !string.IsNullOrEmpty(newEventDate) ? DateTime.Parse(newEventDate) : eventToUpdate.EventDate,
+                StartTime = !string.IsNullOrEmpty(newStartTime) ? DateTime.Parse(newStartTime) : eventToUpdate.StartTime,
+                EndTime = !string.IsNullOrEmpty(newEndTime) ? DateTime.Parse(newEndTime) : eventToUpdate.EndTime,
+                Category = newCategory ?? eventToUpdate.Category,
+                UserId = eventToUpdate.UserId
+            };
+
+            await _calendarRepository.UpdateAsync(updatedEvent);
+
+            return $"✅ Successfully updated event '{updatedEvent.EventName}' (was: '{eventToUpdate.EventName}') on {updatedEvent.EventDate:MMMM d, yyyy}.";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error updating event: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("smart_delete_event")]
+    [Description("Deletes an event by finding the best match for a partial/misspelled name")]
+    public async Task<string> SmartDeleteEvent(
+        [Description("User ID")] string userId,
+        [Description("Partial or potentially misspelled event name to find and delete")] string searchText,
+        [Description("Optional: date filter to narrow search")] string dateFilter = null)
+    {
+        try
+        {
+            var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
+            var eventsList = allEvents.ToList();
+            
+            if (!eventsList.Any())
+            {
+                return "📅 You don't have any calendar events to delete.";
+            }
+
+            // Filter by date if provided
+            if (!string.IsNullOrEmpty(dateFilter) && DateTime.TryParse(dateFilter, out DateTime filterDate))
+            {
+                eventsList = eventsList.Where(e => e.EventDate.Date == filterDate.Date).ToList();
+            }
+
+            // Find best matching event
+            var scoredEvents = eventsList.Select(evt => new
+            {
+                Event = evt,
+                TotalScore = (CalculateSimilarity(searchText.ToLower(), evt.EventName.ToLower()) * 0.7) +
+                           (CalculateSimilarity(searchText.ToLower(), evt.EventDescription.ToLower()) * 0.3)
+            }).OrderByDescending(x => x.TotalScore).ToList();
+
+            var bestMatch = scoredEvents.First();
+            const double threshold = 0.3;
+            
+            if (bestMatch.TotalScore < threshold)
+            {
+                return $"❌ Could not find a good match for '{searchText}'. Please use 'find_best_matching_event' first to see available events.";
+            }
+
+            var eventToDelete = bestMatch.Event;
+            var eventName = eventToDelete.EventName;
+            var deleted = await _calendarRepository.DeleteAsync(eventToDelete.Id);
+            
+            if (!deleted)
+            {
+                return "❌ Failed to delete event.";
+            }
+
+            // Remove from user's calendar items
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user != null)
+            {
+                user.CalendarItems.Remove(eventToDelete.Id);
+                await _userRepository.UpdateAsync(user);
+            }
+
+            return $"✅ Successfully deleted event '{eventName}'.";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Error deleting event: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Calculates similarity between two strings using a combination of techniques
+    /// </summary>
+    private double CalculateSimilarity(string source, string target)
+    {
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target))
+            return 0;
+
+        if (source == target)
+            return 1;
+
+        // Check for exact substring match
+        if (source.Contains(target) || target.Contains(source))
+            return 0.8;
+
+        // Levenshtein distance similarity
+        var levenshteinSimilarity = 1.0 - (double)LevenshteinDistance(source, target) / Math.Max(source.Length, target.Length);
+        
+        // Jaccard similarity (word-based)
+        var jaccardSimilarity = CalculateJaccardSimilarity(source, target);
+        
+        // Combine both metrics
+        return (levenshteinSimilarity * 0.6) + (jaccardSimilarity * 0.4);
+    }
+
+    /// <summary>
+    /// Calculates Levenshtein distance between two strings
+    /// </summary>
+    private int LevenshteinDistance(string source, string target)
+    {
+        if (source == null) return target?.Length ?? 0;
+        if (target == null) return source.Length;
+
+        var matrix = new int[source.Length + 1, target.Length + 1];
+
+        // Initialize first column and row
+        for (int i = 0; i <= source.Length; i++)
+            matrix[i, 0] = i;
+        for (int j = 0; j <= target.Length; j++)
+            matrix[0, j] = j;
+
+        // Fill the matrix
+        for (int i = 1; i <= source.Length; i++)
+        {
+            for (int j = 1; j <= target.Length; j++)
+            {
+                int cost = (target[j - 1] == source[i - 1]) ? 0 : 1;
+                matrix[i, j] = Math.Min(
+                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
+                    matrix[i - 1, j - 1] + cost);
+            }
+        }
+
+        return matrix[source.Length, target.Length];
+    }
+
+    /// <summary>
+    /// Calculates Jaccard similarity between two strings based on word overlap
+    /// </summary>
+    private double CalculateJaccardSimilarity(string source, string target)
+    {
+        var sourceWords = source.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        var targetWords = target.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        
+        var intersection = sourceWords.Intersect(targetWords).Count();
+        var union = sourceWords.Union(targetWords).Count();
+        
+        return union == 0 ? 0 : (double)intersection / union;
+    }
+
+    // ... Keep all your existing functions (create_calendar_event, get_user_events, etc.)
+    
     [KernelFunction("create_calendar_event")]
     [Description("Creates a new calendar event for the user")]
     public async Task<string> CreateCalendarEvent(
@@ -390,7 +665,7 @@ public class CalendarFunctions
             var response = "📅 Your upcoming events:\n\n";
             foreach (var evt in eventsList.OrderBy(e => e.StartTime))
             {
-                response += $"• **{evt.EventName}** ({evt.Category})\n";
+                response += $"• **{evt.EventName}** ({evt.Category}) [ID: {evt.Id}]\n";
                 response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
                 response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n";
                 response += $"  📝 {evt.EventDescription}\n\n";
@@ -421,7 +696,7 @@ public class CalendarFunctions
             var response = "📅 Your upcoming events:\n\n";
             foreach (var evt in eventsList.OrderBy(e => e.StartTime).Take(5))
             {
-                response += $"• **{evt.EventName}** ({evt.Category})\n";
+                response += $"• **{evt.EventName}** ({evt.Category}) [ID: {evt.Id}]\n";
                 response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
                 response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n";
                 response += $"  📝 {evt.EventDescription}\n\n";
