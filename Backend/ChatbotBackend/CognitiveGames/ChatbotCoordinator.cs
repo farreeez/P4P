@@ -32,7 +32,7 @@
         }
 
         // Otherwise, route to LLM
-        string llmRawResponse = await _llmService.GetLLMResponseAsync(userMessage);
+        string llmRawResponse = await _llmService.GetLLMResponseAsync(userMessage, userId);
 
         // Check for starting cognitive activities
         if (llmRawResponse.ToLower().Contains("start memory recall activity"))

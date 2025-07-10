@@ -5,10 +5,8 @@ namespace ChatbotBackend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AppController
-        : ControllerBase
+    public class AppController : ControllerBase
     {
-
         private readonly ILogger<AppController> _logger;
         private readonly LLMService _llmService;
         private readonly ChatbotCoordinator _chatbotCoordinator;
@@ -31,19 +29,17 @@ namespace ChatbotBackend.Controllers
                 return BadRequest("Message is required.");
             }
 
-            // You'll need a way to identify the user/session.
-            // For now, let's use a dummy ID or assume it comes from the message object.
-            // In a real app, this would be from authentication or a session ID.
-            string userId = "user123"; // Replace with actual user ID mechanism
-
+            // Get userId from the message or from authentication context
+            // For now, we'll use the userId from the message, but in a real app
+            // you'd get this from the authenticated user context
+            
             Console.WriteLine($"User: {message.Text}");
 
             // Route the message through the coordinator
-            var response = await _chatbotCoordinator.ProcessChatMessage(userId, message.Text);
+            var response = await _chatbotCoordinator.ProcessChatMessage(message.UserId, message.Text);
 
             Console.WriteLine($"Chatbot: {response}");
             return Ok(new { response });
         }
-
     }
 }

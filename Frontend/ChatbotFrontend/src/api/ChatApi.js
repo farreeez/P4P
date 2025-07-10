@@ -7,8 +7,11 @@ export class ChatApi {
   static sendMessageAsync() {
     const { data, isLoading, isError, post } = createAsync();
 
-    async function sendMessage(message) {
-      const output = {text: message};
+    async function sendMessage(message, userId) {
+      const output = {
+        text: message,
+        userId: userId
+      };
       const botResponse = await post(`${API_COMP_URL}/Chat`, output, {
         headers: { 'Content-Type': 'application/json' },
       });
