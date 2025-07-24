@@ -13,6 +13,7 @@ import PublicRoute from "./utils/PublicRoute";
 import PrivateRoute from "./utils/PrivateRoute";
 import LoginPage from "./components/LoginPage/LoginPage";
 import RegisterPage from "./components/RegisterPage/RegisterPage";
+import BrainExercisesPage from "./components/brainExercisesComponent/BrainExercises";
 
 function App() {
   return (
@@ -38,21 +39,15 @@ function App() {
             path="/app/*"
             element={
               <PrivateRoute>
-                <Outlet/>
+                <Outlet />
               </PrivateRoute>
             }
           >
             <Route path="home" element={<HomePage />} />
             <Route path="chat" element={<ChatPage />} />
-            <Route
-              path="exercises"
-              element={<div>Coming Soon: Brain Exercises</div>}
-            />
+            <Route path="exercises" element={<BrainExercisesPage />} />
             <Route path="reminders" element={<CalendarPage />} />
-            <Route
-              path="settings"
-              element={<div>Coming Soon: Settings</div>}
-            />
+            <Route path="settings" element={<div>Coming Soon: Settings</div>} />
           </Route>
         </Routes>
       </Router>
