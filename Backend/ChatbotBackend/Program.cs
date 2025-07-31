@@ -1,5 +1,6 @@
 using ChatbotBackend.LLMServices;
 using ChatbotBackend.Repositories;
+using ChatbotBackend.Services; // Add this using directive
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,6 @@ builder.Configuration.AddUserSecrets<Program>();
 // Add controllers
 builder.Services.AddControllers();
 
-
 // Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
@@ -20,11 +20,13 @@ builder.Services.AddScoped<LLMService>();
 builder.Services.AddScoped<DementiaAssessmentService>();
 builder.Services.AddScoped<ChatbotCoordinator>();
 
+// Register the new FactExtractionService [New]
+builder.Services.AddScoped<FactExtractionService>();
+
 // Other services (keep as singleton **only if** they don't depend on scoped services)
 builder.Services.AddSingleton<TextToSpeechService>();
 builder.Services.AddSingleton<SpeechToTextService>();
 builder.Services.AddSingleton<CognitiveActivityManager>();
-
 
 // Add DbContext configuration
 builder.Services.AddDbContext<MyDbContext>(options =>
