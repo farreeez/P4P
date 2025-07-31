@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatbotBackend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250605152806_initialMigraitons")]
-    partial class initialMigraitons
+    [Migration("20250731084230_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,32 @@ namespace ChatbotBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TestModels");
+                });
+
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("CalendarItems")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }
