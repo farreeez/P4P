@@ -14,7 +14,7 @@ public class LLMService
     private readonly IChatCompletionService _chatService;
     private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
     private readonly ICalendarRepository _calendarRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly IUserRepository _userRepository; // Already injected [cite: 337, 338, 339]
     private readonly string _apiKey;
     private readonly string _modelId;
     private readonly string _embeddingModelId;
@@ -36,20 +36,15 @@ public class LLMService
             throw new InvalidOperationException("Google Generative AI Model ID for chat is missing or incomplete.");
         }
 
-        // Create kernel with calendar functions
         var kernelBuilder = Kernel.CreateBuilder()
             .AddGoogleAIGeminiChatCompletion(
                 modelId: _modelId,
                 apiKey: _apiKey);
-
         _kernel = kernelBuilder.Build();
 
-        // Add calendar functions to the kernel
         _kernel.Plugins.AddFromObject(new CalendarFunctions(_calendarRepository, _userRepository));
-
         _chatService = _kernel.GetRequiredService<IChatCompletionService>();
 
-        // Setup embedding service
         IKernelBuilder embeddingKernelBuilder = Kernel.CreateBuilder()
             .AddGoogleAIEmbeddingGenerator(
                 modelId: _embeddingModelId,
@@ -67,12 +62,22 @@ public class LLMService
     public async Task<string> GetLLMResponseAsync(string userMessage, string userId)
     {
         var chatHistory = new ChatHistory();
-        // Add system message with context about calendar capabilities
+
+        // 1. Retrieve User Profile Facts [New]
+        var user = await _userRepository.GetByIdAsync(userId);
+        var userProfileContext = BuildUserProfileContext(user); // Helper method to build context
+
         var currentDateTime = DateTime.Now;
+
+        // 2. Inject User Profile Context into System Message [Modified]
         chatHistory.AddSystemMessage($@"
 # Combined AI Assistant System Prompt
 
 You are a helpful AI assistant with both calendar management capabilities and brain health/dementia support features. You can help users with:
+
+## User Profile Information:
+{userProfileContext}
+---
 
 ## Calendar Management Capabilities
 PLEASE ONLY MENTION THAT YOU CAN HELP WITH CALENDAR CAPABILITIES ONLY IF THEY ASK FOR SOMETHING RELATED TO CALENDAR EVENTS.
@@ -90,11 +95,8 @@ Always be helpful and provide clear confirmation of actions taken.
 Format dates and times in a user-friendly way.
 
 If a user is editing or creating an event and did not mention all of the inputs, try to infer the category and description if it is easy to guess what they likely are to make a more seamless user experience.
-
 Make sure to ask what time the event is if it is not mentioned as it is important to make sure the user chooses the time for the event.
-
 If a user asks you to add something to their schedule, calendar, routine, or anything along those lines, assume they want you to add an event - there is no need to ask them to specify if they want you to add an event.
-
 ### For creating events, if the user doesn't specify all details:
 - Default start time to the next reasonable hour
 - Default duration to 1 hour if not specified
@@ -103,9 +105,8 @@ If a user asks you to add something to their schedule, calendar, routine, or any
 
 ## Brain Health & Dementia Support
 You can provide information, answer questions, and facilitate cognitive stimulation activities.
-
-If the user expresses interest in playing a brain game (e.g., 'memory game', 'puzzle', 'challenge my brain'), suggest starting a specific activity. For example, you could say: 'I can help you with a memory recall activity! Say 'start memory recall activity' to begin.'
-
+If the user expresses interest in playing a brain game (e.g., 'memory game', 'puzzle', 'challenge my brain'), suggest starting a specific activity.
+For example, you could say: 'I can help you with a memory recall activity! Say 'start memory recall activity' to begin.'
 Otherwise, provide helpful and empathetic responses based on the user's query.
 
 ## Important Context
@@ -138,7 +139,6 @@ Otherwise, provide helpful and empathetic responses based on the user's query.
                 chatHistory,
                 executionSettings,
                 kernel: _kernel);
-
             return result?.Content ?? "I apologize, but I couldn't process your request at the moment.";
         }
         catch (Exception ex)
@@ -146,6 +146,53 @@ Otherwise, provide helpful and empathetic responses based on the user's query.
             Console.WriteLine($"Error getting LLM response: {ex.Message}");
             throw;
         }
+    }
+
+    // New helper method to build the user profile context string
+    private string BuildUserProfileContext(User? user)
+    {
+        if (user == null)
+        {
+            return "No detailed user profile available. The AI assistant should ask for more personal information if relevant to provide tailored support.";
+        }
+
+        var context = new System.Text.StringBuilder();
+        context.AppendLine($"**Name:** {user.FullName}");
+
+        if (user.DateOfBirth.HasValue)
+        {
+            int age = DateTime.Today.Year - user.DateOfBirth.Value.Year;
+            if (user.DateOfBirth.Value.Date > DateTime.Today.AddYears(-age)) age--;
+            context.AppendLine($"**Age:** {age} years old");
+        }
+        if (!string.IsNullOrWhiteSpace(user.Gender))
+            context.AppendLine($"**Gender:** {user.Gender}");
+        if (!string.IsNullOrWhiteSpace(user.FamilyHistoryDementia))
+            context.AppendLine($"**Family History of Dementia:** {user.FamilyHistoryDementia}");
+        if (!string.IsNullOrWhiteSpace(user.LifestyleHabits))
+            context.AppendLine($"**Lifestyle Habits:** {user.LifestyleHabits}");
+        if (!string.IsNullOrWhiteSpace(user.MedicalConditions))
+            context.AppendLine($"**Medical Conditions:** {user.MedicalConditions}");
+        if (!string.IsNullOrWhiteSpace(user.PrimaryBrainHealthConcern))
+            context.AppendLine($"**Primary Brain Health Concern:** {user.PrimaryBrainHealthConcern}");
+        if (!string.IsNullOrWhiteSpace(user.PreferredCommunicationStyle))
+            context.AppendLine($"**Preferred Communication Style:** {user.PreferredCommunicationStyle}");
+        if (!string.IsNullOrWhiteSpace(user.CurrentMedications))
+            context.AppendLine($"**Current Medications:** {user.CurrentMedications}");
+        if (!string.IsNullOrWhiteSpace(user.SleepPatterns))
+            context.AppendLine($"**Sleep Patterns:** {user.SleepPatterns}");
+        if (!string.IsNullOrWhiteSpace(user.StressLevels))
+            context.AppendLine($"**Stress Levels:** {user.StressLevels}");
+        if (!string.IsNullOrWhiteSpace(user.CognitiveActivityPreference))
+            context.AppendLine($"**Cognitive Activity Preference:** {user.CognitiveActivityPreference}");
+        if (!string.IsNullOrWhiteSpace(user.LastKnownLocation))
+            context.AppendLine($"**Last Known Location:** {user.LastKnownLocation}");
+        if (!string.IsNullOrWhiteSpace(user.EmergencyContact))
+            context.AppendLine($"**Emergency Contact:** {user.EmergencyContact}");
+        if (user.LastInteractionDate.HasValue)
+            context.AppendLine($"**Last Interaction Date:** {user.LastInteractionDate.Value:yyyy-MM-dd}");
+
+        return context.ToString();
     }
 
     /// <summary>

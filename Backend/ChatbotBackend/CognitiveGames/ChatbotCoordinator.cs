@@ -1,18 +1,39 @@
-﻿public class ChatbotCoordinator
+﻿using ChatbotBackend.LLMServices;
+using ChatbotBackend.Services; // Add this using directive
+
+
+
+
+// Make sure ChatbotCoordinator is in the correct namespace (e.g., ChatbotBackend.Services)
+public class ChatbotCoordinator
 {
     private readonly LLMService _llmService;
-    private readonly CognitiveActivityManager _activityManager;
     private readonly DementiaAssessmentService _assessmentService;
+    private readonly CognitiveActivityManager _activityManager;
+    private readonly FactExtractionService _factExtractionService; // Inject new service
 
-    public ChatbotCoordinator(LLMService llmService, CognitiveActivityManager activityManager, DementiaAssessmentService assessmentService)
+    public ChatbotCoordinator(
+        LLMService llmService,
+        DementiaAssessmentService assessmentService,
+        CognitiveActivityManager activityManager,
+        FactExtractionService factExtractionService) // Add to constructor
     {
         _llmService = llmService;
-        _activityManager = activityManager;
         _assessmentService = assessmentService;
+        _activityManager = activityManager;
+        _factExtractionService = factExtractionService; // Assign
     }
 
-    public async Task<string> ProcessChatMessage(string userId, string userMessage)
+    public async Task<string> ProcessChatMessage(string? userId, string userMessage)
     {
+        if (string.IsNullOrEmpty(userId))
+        {
+            return "Please provide a user ID to start the conversation.";
+        }
+
+        // 1. First, attempt to extract and store facts from the current message [New]
+        await _factExtractionService.ExtractAndStoreFactsAsync(userId, userMessage);
+
         // Check if user is in an assessment
         if (_assessmentService.IsUserInAssessment(userId))
         {
