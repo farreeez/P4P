@@ -1,29 +1,32 @@
-﻿public class DementiaAssessmentService
+﻿using ChatbotBackend.Repositories;
+
+public class DementiaAssessmentService
 {
     private readonly LLMService _llmService;
-    private readonly Dictionary<string, DementiaAssessmentState> _assessmentStates = new();
+    private readonly IUserRepository _userRepository;  // Change to interface
 
-    public DementiaAssessmentService(LLMService llmService)
+    public DementiaAssessmentService(LLMService llmService, IUserRepository userRepository)  // Change to interface
     {
         _llmService = llmService;
+        _userRepository = userRepository;
     }
 
-    public string StartAssessment(string userId)
+    public async Task<string> StartAssessment(string userId)
     {
         var state = new DementiaAssessmentState
         {
-            UserId = userId,
             CurrentQuestionIndex = 0,
             Responses = new List<QuestionResult>()
         };
-        _assessmentStates[userId] = state;
-
+        
+        await _userRepository.UpdateAssessmentStateAsync(userId, state);
         return "Let's start your dementia pre-assessment. " + DementiaAssessmentQuestions.Questions[0];
     }
 
     public async Task<string> ContinueAssessmentAsync(string userId, string userResponse)
     {
-        if (!_assessmentStates.TryGetValue(userId, out var state) || state.Completed)
+        var state = await _userRepository.GetAssessmentStateAsync(userId);
+        if (state == null || state.Completed)
         {
             return "It looks like you don't have an active assessment. Would you like to start one?";
         }
@@ -37,7 +40,7 @@
         );
 
         var correct = interpretation.Contains("correct", StringComparison.OrdinalIgnoreCase) &&
-                      !interpretation.Contains("incorrect", StringComparison.OrdinalIgnoreCase);
+                     !interpretation.Contains("incorrect", StringComparison.OrdinalIgnoreCase);
 
         state.Responses.Add(new QuestionResult
         {
@@ -52,9 +55,11 @@
         if (state.CurrentQuestionIndex >= DementiaAssessmentQuestions.Questions.Count)
         {
             state.Completed = true;
+            await _userRepository.UpdateAssessmentStateAsync(userId, state);
             return await GenerateSummaryAsync(state);
         }
 
+        await _userRepository.UpdateAssessmentStateAsync(userId, state);
         var nextQuestion = DementiaAssessmentQuestions.Questions[state.CurrentQuestionIndex];
         return $"Thank you. Next question: {nextQuestion}";
     }
@@ -74,8 +79,9 @@
         return "Assessment complete!\n\n" + detailedSummary;
     }
 
-    public bool IsUserInAssessment(string userId)
+    public async Task<bool> IsUserInAssessment(string userId)
     {
-        return _assessmentStates.TryGetValue(userId, out var state) && !state.Completed;
+        var state = await _userRepository.GetAssessmentStateAsync(userId);
+        return state != null && !state.Completed;
     }
 }

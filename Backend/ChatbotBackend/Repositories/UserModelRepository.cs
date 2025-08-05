@@ -72,4 +72,36 @@ public class UserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(x =>
             x.Email.ToLower() == email.ToLower() && x.Password == password);
     }
+
+    public async Task<DementiaAssessmentState?> GetAssessmentStateAsync(string userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || !user.AssessementStarted)
+        {
+            return null;
+        }
+
+        var dementiaAssessmentState = new DementiaAssessmentState
+        {
+            CurrentQuestionIndex = user.CurrentAssessmentQuestionIndex,
+            Responses = user.AssessmentResponses,
+            Completed = user.AssessmentCompleted
+        };
+
+        return dementiaAssessmentState;
+    }
+
+    public async Task UpdateAssessmentStateAsync(string userId, DementiaAssessmentState state)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
+        {
+            Console.WriteLine("should be updating state");
+            user.AssessmentCompleted = state.Completed;
+            user.AssessmentResponses = state.Responses;
+            user.CurrentAssessmentQuestionIndex = state.CurrentQuestionIndex;
+            user.AssessementStarted = true;
+            await _context.SaveChangesAsync();
+        }
+    }
 }

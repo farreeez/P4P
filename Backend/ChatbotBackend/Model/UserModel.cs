@@ -1,8 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 
-
-
-
 public class User
 {
     public string? Id { get; set; }
@@ -34,6 +31,12 @@ public class User
     public string? LastKnownLocation { get; set; } // Example: "New York"
     public string? EmergencyContact { get; set; } // Example: "Jane Doe (Daughter) - 555-1234"
     public DateTime? LastInteractionDate { get; set; } // To track last time the bot interacted
+
+    public int CurrentAssessmentQuestionIndex { get; set; } = 0;
+    public List<QuestionResult> AssessmentResponses { get; set; } = new();
+    public bool AssessmentCompleted { get; set; } = false;
+
+    public bool AssessementStarted { get; set; } = false;
 }
 
 public class CreateUserRequest
