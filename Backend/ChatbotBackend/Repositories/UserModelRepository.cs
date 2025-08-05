@@ -101,6 +101,14 @@ public class UserRepository : IUserRepository
             user.AssessmentResponses = state.Responses;
             user.CurrentAssessmentQuestionIndex = state.CurrentQuestionIndex;
             user.AssessementStarted = true;
+
+            if (user.AssessmentCompleted)
+            {
+                user.AssessementStarted = false;
+                user.AssessmentCompleted = false;
+                user.AssessmentResponses = new();
+                user.CurrentAssessmentQuestionIndex = 0;
+            }
             await _context.SaveChangesAsync();
         }
     }
