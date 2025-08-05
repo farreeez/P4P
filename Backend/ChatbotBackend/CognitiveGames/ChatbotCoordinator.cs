@@ -35,7 +35,7 @@ public class ChatbotCoordinator
         await _factExtractionService.ExtractAndStoreFactsAsync(userId, userMessage);
 
         // Check if user is in an assessment
-        if (_assessmentService.IsUserInAssessment(userId))
+        if (await _assessmentService.IsUserInAssessment(userId))
         {
             return await _assessmentService.ContinueAssessmentAsync(userId, userMessage);
         }
@@ -49,7 +49,7 @@ public class ChatbotCoordinator
         // Detect user request to start assessment
         if (userMessage.ToLower().Contains("start dementia assessment") || userMessage.ToLower().Contains("memory check"))
         {
-            return _assessmentService.StartAssessment(userId);
+            return await _assessmentService.StartAssessment(userId);
         }
 
         // Otherwise, route to LLM

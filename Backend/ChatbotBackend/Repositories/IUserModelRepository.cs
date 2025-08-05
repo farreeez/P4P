@@ -12,5 +12,7 @@ namespace ChatbotBackend.Repositories
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByFullNameAsync(string fullName);
         Task<User?> AuthenticateAsync(string email, string password);
+        Task<DementiaAssessmentState?> GetAssessmentStateAsync(string userId);
+        Task UpdateAssessmentStateAsync(string userId, DementiaAssessmentState state);
     }
 }

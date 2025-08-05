@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatbotBackend.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250731085901_AddUserProfileFactsToUser")]
-    partial class AddUserProfileFactsToUser
+    [Migration("20250805032048_fix")]
+    partial class fix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -19,26 +19,71 @@ namespace ChatbotBackend.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
 
-            modelBuilder.Entity("ChatbotBackend.Model.TestModel", b =>
+            modelBuilder.Entity("ChatbotBackend.Model.Calendar", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EventDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventDescription")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TestModels");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Calendar");
+                });
+
+            modelBuilder.Entity("QuestionResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Correct")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeSpan>("ResponseTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAnswer")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("QuestionResult");
                 });
 
             modelBuilder.Entity("User", b =>
@@ -46,12 +91,21 @@ namespace ChatbotBackend.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("AssessementStarted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AssessmentCompleted")
+                        .HasColumnType("INTEGER");
+
                     b.PrimitiveCollection<string>("CalendarItems")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CognitiveActivityPreference")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("CurrentAssessmentQuestionIndex")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CurrentMedications")
                         .HasColumnType("TEXT");
@@ -107,6 +161,27 @@ namespace ChatbotBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ChatbotBackend.Model.Calendar", b =>
+                {
+                    b.HasOne("User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("QuestionResult", b =>
+                {
+                    b.HasOne("User", null)
+                        .WithMany("AssessmentResponses")
+                        .HasForeignKey("UserId");
+                });
+
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Navigation("AssessmentResponses");
                 });
 #pragma warning restore 612, 618
         }

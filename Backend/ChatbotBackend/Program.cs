@@ -11,7 +11,11 @@ builder.Configuration.AddUserSecrets<Program>();
 // Add controllers
 builder.Services.AddControllers();
 
-// Repositories
+// Add DbContext configuration
+builder.Services.AddDbContext<MyDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
 
@@ -19,21 +23,12 @@ builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
 builder.Services.AddScoped<LLMService>();
 builder.Services.AddScoped<DementiaAssessmentService>();
 builder.Services.AddScoped<ChatbotCoordinator>();
-
-// Register the new FactExtractionService [New]
 builder.Services.AddScoped<FactExtractionService>();
 
 // Other services (keep as singleton **only if** they don't depend on scoped services)
 builder.Services.AddSingleton<TextToSpeechService>();
 builder.Services.AddSingleton<SpeechToTextService>();
 builder.Services.AddSingleton<CognitiveActivityManager>();
-
-// Add DbContext configuration
-builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register TestModelRepository (this one uses DbContext, so it should be Scoped)
-builder.Services.AddScoped<ITestModelRepository, TestModelRepository>();
 
 // Add API documentation
 builder.Services.AddEndpointsApiExplorer();
