@@ -536,3 +536,303 @@
     --text-tertiary: #64748b;
   }
 }
+/* Additional styles for dementia assessment features */
+/* Add these to your existing ChatPage.css file */
+
+/* Timer Container */
+.timer-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: linear-gradient(135deg, var(--warning-amber) 0%, #f59e0b 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  box-shadow: var(--shadow-lg);
+  animation: timerPulse 2s infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: var(--shadow-lg);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+  }
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.timer-icon {
+  font-size: 20px;
+  animation: timerSpin 2s linear infinite;
+}
+
+@keyframes timerSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.timer-text {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Assessment Instructions */
+.assessment-instructions {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin: 0 24px 16px 24px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 2;
+}
+
+.instruction-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-only-indicator,
+.timer-indicator,
+.memory-indicator,
+.question-type-indicator {
+  padding: 8px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+}
+
+.voice-only-indicator:hover,
+.timer-indicator:hover,
+.memory-indicator:hover,
+.question-type-indicator:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.voice-only-indicator {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff8f3f 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.timer-indicator {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: white;
+  border: 1px solid rgba(78, 59, 243, 0.795);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.memory-indicator {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  color: white;
+  border: 1px solid rgba(78, 59, 243, 0.795);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.question-type-indicator {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  color: white;
+  border: 1px solid rgba(78, 59, 243, 0.795);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Hidden Message Styles */
+.hidden-message {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border: 2px dashed var(--border-medium);
+  opacity: 0.8;
+  backdrop-filter: blur(4px);
+}
+
+.hidden-question-placeholder {
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+/* System Message Styles */
+.system-message {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  border-bottom-left-radius: 6px;
+  font-weight: 500;
+}
+
+.system-message::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -9px;
+  width: 0;
+  height: 0;
+  border-right: 8px solid #fef3c7;
+  border-bottom: 8px solid transparent;
+  border-top: 1px solid #f59e0b;
+}
+
+/* Enhanced Microphone Button for Required Voice Input */
+.mic-button.required {
+  background: linear-gradient(135deg, var(--warning-amber) 0%, #f59e0b 100%);
+  animation: micPulse 2s infinite;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+}
+
+@keyframes micPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1);
+  }
+}
+
+.mic-button.required:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Disabled Input State */
+.message-input:disabled {
+  background: var(--background-tertiary);
+  cursor: not-allowed;
+  border-color: var(--border-light);
+}
+
+.message-input:disabled::placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* Assessment Question Highlights */
+.message.assessment-question {
+  border-left: 4px solid var(--primary-blue);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  position: relative;
+}
+
+.message.assessment-question::before {
+  content: '🧠';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--primary-blue);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Responsive Design for Assessment Features */
+@media (max-width: 768px) {
+  .timer-container {
+    top: 10px;
+    right: 10px;
+    padding: 8px 16px;
+  }
+  
+  .timer-display {
+    font-size: 14px;
+  }
+  
+  .timer-icon {
+    font-size: 16px;
+  }
+  
+  .assessment-instructions {
+    margin: 0 16px 12px 16px;
+    padding: 10px 16px;
+  }
+  
+  .instruction-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .voice-only-indicator,
+  .timer-indicator,
+  .memory-indicator {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timer-container {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 0 16px 12px 16px;
+    border-radius: 12px;
+  }
+  
+  .assessment-instructions {
+    margin: 0 12px 8px 12px;
+    padding: 8px 12px;
+  }
+  
+  .hidden-question-placeholder {
+    padding: 15px;
+    font-size: 14px;
+  }
+}
+
+/* Dark mode adjustments for assessment features */
+@media (prefers-color-scheme: dark) {
+  .assessment-instructions {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+  
+  .voice-only-indicator,
+  .timer-indicator,
+  .memory-indicator {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .hidden-message {
+    background: rgba(55, 65, 81, 0.8);
+    border-color: var(--border-medium);
+  }
+  
+  .system-message {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border-color: #f59e0b;
+  }
+}

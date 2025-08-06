@@ -11,7 +11,7 @@ public class DementiaAssessmentService
         _userRepository = userRepository;
     }
 
-    public async Task<string> StartAssessment(string userId)
+    public async Task<ChatResponse> StartAssessment(string userId)
     {
         var state = new DementiaAssessmentState
         {
@@ -20,18 +20,25 @@ public class DementiaAssessmentService
         };
         
         await _userRepository.UpdateAssessmentStateAsync(userId, state);
-        return "Let's start your dementia pre-assessment. " + DementiaAssessmentQuestions.Questions[0];
+        var (question, type) = DementiaAssessmentQuestions.Questions[0];
+        return new ChatResponse
+        {
+            Message = $"Let's start your dementia pre-assessment. {question}",
+            QuestionType = type,
+            Behavior = DementiaAssessmentQuestions.GetBehaviorForType(type)
+        };
     }
 
-    public async Task<string> ContinueAssessmentAsync(string userId, string userResponse)
+    public async Task<(string Message, AssessmentQuestionType Type)> ContinueAssessmentAsync(string userId, string userResponse)
     {
         var state = await _userRepository.GetAssessmentStateAsync(userId);
         if (state == null || state.Completed)
         {
-            return "It looks like you don't have an active assessment. Would you like to start one?";
+            return ("It looks like you don't have an active assessment. Would you like to start one?", 
+                AssessmentQuestionType.Standard);
         }
 
-        var question = DementiaAssessmentQuestions.Questions[state.CurrentQuestionIndex];
+        var (question, questionType) = DementiaAssessmentQuestions.Questions[state.CurrentQuestionIndex];
         var responseStartTime = DateTime.UtcNow;
 
         var interpretation = await _llmService.GetLLMResponseWithContextAsync(
@@ -56,12 +63,12 @@ public class DementiaAssessmentService
         {
             state.Completed = true;
             await _userRepository.UpdateAssessmentStateAsync(userId, state);
-            return await GenerateSummaryAsync(state);
+            return (await GenerateSummaryAsync(state), AssessmentQuestionType.Standard);
         }
 
         await _userRepository.UpdateAssessmentStateAsync(userId, state);
-        var nextQuestion = DementiaAssessmentQuestions.Questions[state.CurrentQuestionIndex];
-        return $"Thank you. Next question: {nextQuestion}";
+        var (nextQuestion, nextType) = DementiaAssessmentQuestions.Questions[state.CurrentQuestionIndex];
+        return ($"Thank you. Next question: {nextQuestion}", nextType);
     }
 
     private async Task<string> GenerateSummaryAsync(DementiaAssessmentState state)

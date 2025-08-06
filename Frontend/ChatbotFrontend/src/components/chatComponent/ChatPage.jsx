@@ -10,6 +10,15 @@ import { TTS } from "../../api/ttsApi";
 import { playAudioFromBase64 } from "../../utils/audioPlayer";
 import { STT } from "../../api/sttApi";
 
+// Question type enum matching your backend
+const AssessmentQuestionType = {
+  Standard: 0,        // Regular chat message
+  SimpleAssessment: 1, // Question 1: Day of week - read aloud, stays visible, text/verbal response
+  MemoryRecall: 2,    // Question 2: Three words - read aloud, hidden after 3s, text/verbal response
+  VerbalOnly: 3,      // Question 3: Count backwards - read aloud, stays visible, verbal response only
+  TimedVerbal: 4      // Question 4: Animals naming - read aloud, stays visible, verbal response with 30s timer
+};
+
 export default function ChatPage() {
   const { chatMessages, setChatMessages, currentUser } = useContext(AppContext);
   const [input, setInput] = useState("");
@@ -22,11 +31,53 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  
+  // New states for dementia assessment
+  const [currentQuestionType, setCurrentQuestionType] = useState(AssessmentQuestionType.Standard);
+  const [currentAssessmentBehavior, setCurrentAssessmentBehavior] = useState(null);
+  const [isTextInputDisabled, setIsTextInputDisabled] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [timerInterval, setTimerInterval] = useState(null);
+  const [lastBotMessageIndex, setLastBotMessageIndex] = useState(null);
+  const [timerStarted, setTimerStarted] = useState(false);
+  const [timerExpiredSent, setTimerExpiredSent] = useState(false);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages]);
+
+  // Timer effect
+  useEffect(() => {
+    if (showTimer && timeRemaining > 0 && timerStarted) {
+      const interval = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setShowTimer(false);
+            if (!timerExpiredSent) {
+              handleTimerExpired();
+              setTimerExpiredSent(true);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      setTimerInterval(interval);
+      return () => clearInterval(interval);
+    }
+  }, [showTimer, timeRemaining, timerStarted]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [timerInterval]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,6 +85,70 @@ export default function ChatPage() {
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
+  };
+
+  const handleTimerExpired = () => {
+    const timeUpMessage = {
+      text: "Time's up! Please proceed to answer or move to the next question.",
+      sender: "system",
+      timestamp: new Date().toISOString(),
+      isSystemMessage: true,
+    };
+    setChatMessages((prevMessages) => [...prevMessages, timeUpMessage]);
+  };
+
+  const isAssessmentQuestion = (questionType) => {
+    return questionType > AssessmentQuestionType.Standard;
+  };
+
+  const handleAssessmentResponse = async (responseData) => {
+    const { behavior, questionType } = responseData;
+    setCurrentQuestionType(questionType);
+    setCurrentAssessmentBehavior(behavior);
+    
+    if (behavior) {
+      // Handle text input restriction for verbal-only questions
+      setIsTextInputDisabled(behavior.requiresVoice);
+      
+      // Handle read aloud
+      if (behavior.requiresReadAloud) {
+        try {
+          const ttsResponse = await synthesize(responseData.message);
+          await playAudioFromBase64(ttsResponse);
+        } catch (err) {
+          console.error("Auto TTS playback error:", err);
+        }
+      }
+      
+      // Handle hiding after delay (for memory recall questions)
+      if (behavior.hideAfterDelay && behavior.hideDelaySeconds) {
+        setTimeout(() => {
+          // Update the last bot message to show it's hidden
+          setChatMessages((prevMessages) => {
+            console.log("prevMessages");
+            console.log(prevMessages);
+            const newMessages = [...prevMessages];
+            console.log("newMessages")
+            console.log(newMessages);
+            if (lastBotMessageIndex !== null) {
+              newMessages[newMessages.length - 1] = {
+                ...newMessages[newMessages.length - 1],
+                isHidden: true,
+              };
+            }
+            return newMessages;
+          });
+        }, behavior.hideDelaySeconds * 1000);
+      }
+      
+      // Handle timer (for timed verbal questions)
+      if (behavior.hasTimer && behavior.timerDurationSeconds) {
+        setTimeRemaining(behavior.timerDurationSeconds);
+        setShowTimer(true);
+        setTimerStarted(false); // Don't start timer until recording starts
+        setTimerExpiredSent(false); // Reset timer expired flag
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -51,15 +166,54 @@ export default function ChatPage() {
     setInput("");
     setIsLoading(true);
 
+    // Clear timer if active
+    if (showTimer) {
+      setShowTimer(false);
+      setTimerStarted(false);
+      setTimerExpiredSent(false);
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    }
+
     try {
       // Pass the current user's ID to the chat API
       const data = await sendMessage(userMessage.text, currentUser?.id);
+
+      console.log("chatbot response:");
+      console.log(data);
+      
+      // Handle response format
       const botMessage = {
-        text: data.response || "Sorry, I couldn't process that request.",
+        text: data.message || "Sorry, I couldn't process that request.",
         sender: "bot",
         timestamp: new Date().toISOString(),
+        questionType: data.questionType,
+        behavior: data.behavior,
       };
-      setChatMessages((prevMessages) => [...prevMessages, botMessage]);
+      
+      setChatMessages((prevMessages) => {
+        const newMessages = [...prevMessages, botMessage];
+        return newMessages;
+      });
+
+      // Store the index AFTER setting messages, so we have the correct index
+      setLastBotMessageIndex(chatMessages.length);
+      
+      // Handle assessment question behavior
+      if (isAssessmentQuestion(data.questionType)) {
+        console.log("Processing assessment question type:", data.questionType);
+        await handleAssessmentResponse(data);
+      } else {
+        // Reset assessment state for standard messages
+        setCurrentQuestionType(AssessmentQuestionType.Standard);
+        setCurrentAssessmentBehavior(null);
+        setIsTextInputDisabled(false);
+        setShowTimer(false);
+        setTimerStarted(false);
+        setTimerExpiredSent(false);
+      }
+      
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = {
@@ -140,6 +294,11 @@ export default function ChatPage() {
 
         setIsRecording(true);
 
+        // Start timer for timed questions when recording starts
+        if (showTimer && !timerStarted) {
+          setTimerStarted(true);
+        }
+
         // Store references for stopping
         window.currentRecording = {
           stream,
@@ -172,7 +331,19 @@ export default function ChatPage() {
             audioEncoding: "LINEAR16",
             sampleRate: 16000,
           });
-          setInput(sttResponse?.transcription || "");
+          
+          const transcribedText = sttResponse?.transcription || "";
+          setInput(transcribedText);
+          
+          // For voice-only questions, auto-submit after transcription
+          if (isTextInputDisabled && transcribedText.trim()) {
+            // Wait a bit for the input to be set, then submit
+            setTimeout(() => {
+              const submitEvent = { preventDefault: () => {} };
+              handleSubmit(submitEvent);
+            }, 100);
+          }
+          
         } catch (err) {
           console.error("STT error:", err);
         }
@@ -244,6 +415,21 @@ export default function ChatPage() {
     return new Blob([arrayBuffer], { type: "audio/wav" });
   }
 
+  const getQuestionTypeDisplay = (questionType) => {
+    switch (questionType) {
+      case AssessmentQuestionType.SimpleAssessment:
+        return "Assessment Question";
+      case AssessmentQuestionType.MemoryRecall:
+        return "Memory Recall";
+      case AssessmentQuestionType.VerbalOnly:
+        return "Verbal Response Only";
+      case AssessmentQuestionType.TimedVerbal:
+        return "Timed Verbal Response";
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="chat-container">
       <Header title="AI Assistant" />
@@ -263,11 +449,13 @@ export default function ChatPage() {
                 className={`message-wrapper ${
                   message.sender === "user"
                     ? "user-message-wrapper"
+                    : message.sender === "system"
+                    ? "bot-message-wrapper"
                     : "bot-message-wrapper"
                 }`}
               >
                 {/* Bot play button with enhanced styling */}
-                {message.sender === "bot" && !message.isError && (
+                {(message.sender === "bot" || message.sender === "system") && !message.isError && (
                   <button
                     className="play-button"
                     title="Listen to message"
@@ -288,10 +476,21 @@ export default function ChatPage() {
                       ? "user-message"
                       : message.isError
                       ? "error-message"
+                      : message.sender === "system"
+                      ? "system-message"
                       : "bot-message"
+                  } ${message.isHidden ? "hidden-message" : ""} ${
+                    message.questionType && isAssessmentQuestion(message.questionType) 
+                      ? "assessment-question" : ""
                   }`}
                 >
-                  {message.text}
+                  {message.isHidden ? (
+                    <div className="hidden-question-placeholder">
+                      <em>Question hidden - please answer from memory</em>
+                    </div>
+                  ) : (
+                    message.text
+                  )}
                 </div>
               </div>
             ))
@@ -311,6 +510,41 @@ export default function ChatPage() {
         </div>
       </div>
 
+      {/* Timer Display */}
+      {showTimer && (
+        <div className="timer-container">
+          <div className="timer-display">
+            <span className="timer-icon">⏱️</span>
+            <span className="timer-text">
+              {timerStarted 
+                ? `Time remaining: ${timeRemaining}s` 
+                : "Click microphone to start timer"
+              }
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Assessment Instructions */}
+      {isAssessmentQuestion(currentQuestionType) && currentAssessmentBehavior && (
+        <div className="assessment-instructions">
+          <div className="instruction-content">
+            <span className="question-type-indicator">
+              {getQuestionTypeDisplay(currentQuestionType)}
+            </span>
+            {currentAssessmentBehavior.requiresVoice && (
+              <span className="voice-only-indicator">🎤 Voice response required</span>
+            )}
+            {currentAssessmentBehavior.hasTimer && (
+              <span className="timer-indicator">⏱️ Timed question</span>
+            )}
+            {currentAssessmentBehavior.hideAfterDelay && (
+              <span className="memory-indicator">🧠 Remember the words</span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="input-container">
         <div className="input-wrapper">
           <textarea
@@ -322,14 +556,20 @@ export default function ChatPage() {
                 handleSubmit(e);
               }
             }}
-            placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
+            placeholder={
+              isTextInputDisabled
+                ? "Voice response required - use microphone"
+                : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
+            }
             className="message-input"
             rows="1"
+            disabled={isTextInputDisabled}
             style={{
               resize: "none",
               overflow: "hidden",
               minHeight: "24px",
               height: "auto",
+              opacity: isTextInputDisabled ? 0.5 : 1,
             }}
             onInput={(e) => {
               // Auto-resize textarea
@@ -344,7 +584,7 @@ export default function ChatPage() {
             disabled={isLoading}
             className={`action-button mic-button ${
               isRecording ? "recording" : ""
-            }`}
+            } ${isTextInputDisabled ? "required" : ""}`}
             title={isRecording ? "Stop Recording" : "Start Voice Recording"}
             aria-label={
               isRecording ? "Stop recording" : "Start voice recording"
