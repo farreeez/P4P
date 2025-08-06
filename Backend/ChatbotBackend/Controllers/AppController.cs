@@ -25,21 +25,14 @@ namespace ChatbotBackend.Controllers
                 return BadRequest(ModelState);
 
             if (string.IsNullOrWhiteSpace(message.Text))
-            {
                 return BadRequest("Message is required.");
-            }
 
-            // Get userId from the message or from authentication context
-            // For now, we'll use the userId from the message, but in a real app
-            // you'd get this from the authenticated user context
-            
             Console.WriteLine($"User: {message.Text}");
 
-            // Route the message through the coordinator
             var response = await _chatbotCoordinator.ProcessChatMessage(message.UserId, message.Text);
+            Console.WriteLine($"Chatbot: {response.Message}");
 
-            Console.WriteLine($"Chatbot: {response}");
-            return Ok(new { response });
+            return Ok(response);
         }
     }
 }

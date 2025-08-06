@@ -79,7 +79,7 @@ public class CognitiveActivityManager
 
 
     // Method to start an activity
-    public string StartActivity(string userId, string activityType)
+    public ChatResponse StartActivity(string userId, string activityType)
     {
         // For simplicity, hardcode activity creation. In a real app, use a factory pattern or DI.
         ICognitiveActivity activity;
@@ -90,24 +90,40 @@ public class CognitiveActivityManager
                 break;
             // Add other activity types here
             default:
-                return "I don't have that activity. Would you like to try 'Memory Recall'?";
+                return new ChatResponse
+                {
+                    Message = "I don't have that activity. Would you like to try 'Memory Recall'?",
+                    QuestionType = AssessmentQuestionType.Standard
+                };
         }
         _activeActivities[userId] = activity;
-        return activity.GetInitialPrompt();
+        return new ChatResponse
+        {
+            Message = activity.GetInitialPrompt(),
+            QuestionType = AssessmentQuestionType.Standard
+        };
     }
 
     // Method to handle user input during an activity
-    public string HandleActivityInput(string userId, string userInput)
+    public ChatResponse HandleActivityInput(string userId, string userInput)
     {
         if (!_activeActivities.TryGetValue(userId, out var activity))
         {
-            return "You are not currently in an activity. Would you like to start one?";
+            return new ChatResponse
+            {
+                Message = "You are not currently in an activity. Would you like to start one?",
+                QuestionType = AssessmentQuestionType.Standard
+            };
         }
 
         if (activity.IsActivityComplete)
         {
             _activeActivities.Remove(userId);
-            return activity.GetCompletionMessage();
+            return new ChatResponse
+            {
+                Message = activity.GetCompletionMessage(),
+                QuestionType = AssessmentQuestionType.Standard
+            };
         }
 
         string response = activity.GetNextPrompt(userInput);
@@ -121,6 +137,11 @@ public class CognitiveActivityManager
             response += $"\nYour current score is: {_userScores[userId]}. {activity.GetCompletionMessage()}";
             _activeActivities.Remove(userId); // End activity
         }
-        return response;
+        
+        return new ChatResponse
+        {
+            Message = response,
+            QuestionType = AssessmentQuestionType.Standard
+        };
     }
 }

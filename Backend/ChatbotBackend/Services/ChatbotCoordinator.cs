@@ -1,8 +1,5 @@
-﻿using ChatbotBackend.LLMServices;
+using ChatbotBackend.LLMServices;
 using ChatbotBackend.Services; // Add this using directive
-
-
-
 
 // Make sure ChatbotCoordinator is in the correct namespace (e.g., ChatbotBackend.Services)
 public class ChatbotCoordinator
@@ -24,43 +21,53 @@ public class ChatbotCoordinator
         _factExtractionService = factExtractionService; // Assign
     }
 
-    public async Task<string> ProcessChatMessage(string? userId, string userMessage)
+    public async Task<ChatResponse> ProcessChatMessage(string? userId, string userMessage)
     {
         if (string.IsNullOrEmpty(userId))
         {
-            return "Please provide a user ID to start the conversation.";
+            return new ChatResponse
+            {
+                Message = "Please provide a user ID to start the conversation.",
+                QuestionType = AssessmentQuestionType.Standard
+            };
         }
 
-        // 1. First, attempt to extract and store facts from the current message [New]
         await _factExtractionService.ExtractAndStoreFactsAsync(userId, userMessage);
 
-        // Check if user is in an assessment
         if (await _assessmentService.IsUserInAssessment(userId))
         {
-            return await _assessmentService.ContinueAssessmentAsync(userId, userMessage);
+            var (response, questionType) = await _assessmentService.ContinueAssessmentAsync(userId, userMessage);
+            return new ChatResponse
+            {
+                Message = response,
+                QuestionType = questionType,
+                Behavior = DementiaAssessmentQuestions.GetBehaviorForType(questionType)
+            };
         }
 
         // Check if user is in an activity
         if (_activityManager.IsUserInActivity(userId))
         {
-            return _activityManager.HandleActivityInput(userId, userMessage);
+            return new ChatResponse
+            {
+                Message = _activityManager.HandleActivityInput(userId, userMessage),
+                QuestionType = AssessmentQuestionType.Standard
+            };
         }
 
         // Detect user request to start assessment
-        if (userMessage.ToLower().Contains("start dementia assessment") || userMessage.ToLower().Contains("memory check"))
+        if (userMessage.ToLower().Contains("start dementia assessment") ||
+            userMessage.ToLower().Contains("memory check"))
         {
             return await _assessmentService.StartAssessment(userId);
         }
 
         // Otherwise, route to LLM
-        string llmRawResponse = await _llmService.GetLLMResponseAsync(userMessage, userId);
-
-        // Check for starting cognitive activities
-        if (llmRawResponse.ToLower().Contains("start memory recall activity"))
+        string llmResponse = await _llmService.GetLLMResponseAsync(userMessage, userId);
+        return new ChatResponse
         {
-            return _activityManager.StartActivity(userId, "memory recall");
-        }
-
-        return llmRawResponse;
+            Message = llmResponse,
+            QuestionType = AssessmentQuestionType.Standard
+        };
     }
 }
