@@ -12,11 +12,11 @@ import { STT } from "../../api/sttApi";
 
 // Question type enum matching your backend
 const AssessmentQuestionType = {
-  Standard: 0,        // Regular chat message
+  Standard: 0, // Regular chat message
   SimpleAssessment: 1, // Question 1: Day of week - read aloud, stays visible, text/verbal response
-  MemoryRecall: 2,    // Question 2: Three words - read aloud, hidden after 3s, text/verbal response
-  VerbalOnly: 3,      // Question 3: Count backwards - read aloud, stays visible, verbal response only
-  TimedVerbal: 4      // Question 4: Animals naming - read aloud, stays visible, verbal response with 30s timer
+  MemoryRecall: 2, // Question 2: Three words - read aloud, hidden after 3s, text/verbal response
+  VerbalOnly: 3, // Question 3: Count backwards - read aloud, stays visible, verbal response only
+  TimedVerbal: 4, // Question 4: Animals naming - read aloud, stays visible, verbal response with 30s timer
 };
 
 export default function ChatPage() {
@@ -31,10 +31,13 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  
+
   // New states for dementia assessment
-  const [currentQuestionType, setCurrentQuestionType] = useState(AssessmentQuestionType.Standard);
-  const [currentAssessmentBehavior, setCurrentAssessmentBehavior] = useState(null);
+  const [currentQuestionType, setCurrentQuestionType] = useState(
+    AssessmentQuestionType.Standard
+  );
+  const [currentAssessmentBehavior, setCurrentAssessmentBehavior] =
+    useState(null);
   const [isTextInputDisabled, setIsTextInputDisabled] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -79,6 +82,12 @@ export default function ChatPage() {
     };
   }, [timerInterval]);
 
+  const startDementiaAssessmnt = (e) => {
+    e.preventDefault();
+
+    handleSubmit(null, true);
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -105,11 +114,11 @@ export default function ChatPage() {
     const { behavior, questionType } = responseData;
     setCurrentQuestionType(questionType);
     setCurrentAssessmentBehavior(behavior);
-    
+
     if (behavior) {
       // Handle text input restriction for verbal-only questions
       setIsTextInputDisabled(behavior.requiresVoice);
-      
+
       // Handle read aloud
       if (behavior.requiresReadAloud) {
         try {
@@ -119,7 +128,7 @@ export default function ChatPage() {
           console.error("Auto TTS playback error:", err);
         }
       }
-      
+
       // Handle hiding after delay (for memory recall questions)
       if (behavior.hideAfterDelay && behavior.hideDelaySeconds) {
         setTimeout(() => {
@@ -128,7 +137,7 @@ export default function ChatPage() {
             console.log("prevMessages");
             console.log(prevMessages);
             const newMessages = [...prevMessages];
-            console.log("newMessages")
+            console.log("newMessages");
             console.log(newMessages);
             if (lastBotMessageIndex !== null) {
               newMessages[newMessages.length - 1] = {
@@ -140,7 +149,7 @@ export default function ChatPage() {
           });
         }, behavior.hideDelaySeconds * 1000);
       }
-      
+
       // Handle timer (for timed verbal questions)
       if (behavior.hasTimer && behavior.timerDurationSeconds) {
         setTimeRemaining(behavior.timerDurationSeconds);
@@ -151,16 +160,28 @@ export default function ChatPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, isAssesment = false) => {
+    if (e) {
+      e.preventDefault();
+    }
 
-    if (!input.trim()) return;
+    if (!input.trim() && !isAssesment) return;
 
-    const userMessage = {
-      text: input,
-      sender: "user",
-      timestamp: new Date().toISOString(),
-    };
+    let userMessage;
+
+    if (isAssesment) {
+      userMessage = {
+        text: "start dementia assessment",
+        sender: "user",
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      userMessage = {
+        text: input,
+        sender: "user",
+        timestamp: new Date().toISOString(),
+      };
+    }
 
     setChatMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
@@ -182,7 +203,7 @@ export default function ChatPage() {
 
       console.log("chatbot response:");
       console.log(data);
-      
+
       // Handle response format
       const botMessage = {
         text: data.message || "Sorry, I couldn't process that request.",
@@ -191,7 +212,7 @@ export default function ChatPage() {
         questionType: data.questionType,
         behavior: data.behavior,
       };
-      
+
       setChatMessages((prevMessages) => {
         const newMessages = [...prevMessages, botMessage];
         return newMessages;
@@ -199,7 +220,7 @@ export default function ChatPage() {
 
       // Store the index AFTER setting messages, so we have the correct index
       setLastBotMessageIndex(chatMessages.length);
-      
+
       // Handle assessment question behavior
       if (isAssessmentQuestion(data.questionType)) {
         console.log("Processing assessment question type:", data.questionType);
@@ -213,7 +234,6 @@ export default function ChatPage() {
         setTimerStarted(false);
         setTimerExpiredSent(false);
       }
-      
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = {
@@ -331,10 +351,10 @@ export default function ChatPage() {
             audioEncoding: "LINEAR16",
             sampleRate: 16000,
           });
-          
+
           const transcribedText = sttResponse?.transcription || "";
           setInput(transcribedText);
-          
+
           // For voice-only questions, auto-submit after transcription
           if (isTextInputDisabled && transcribedText.trim()) {
             // Wait a bit for the input to be set, then submit
@@ -343,7 +363,6 @@ export default function ChatPage() {
               handleSubmit(submitEvent);
             }, 100);
           }
-          
         } catch (err) {
           console.error("STT error:", err);
         }
@@ -455,21 +474,22 @@ export default function ChatPage() {
                 }`}
               >
                 {/* Bot play button with enhanced styling */}
-                {(message.sender === "bot" || message.sender === "system") && !message.isError && (
-                  <button
-                    className="play-button"
-                    title="Listen to message"
-                    onClick={() => handlePlayTTS(message.text, index)}
-                    disabled={playingIndex === index}
-                    aria-label={
-                      playingIndex === index
-                        ? "Playing message"
-                        : "Play message"
-                    }
-                  >
-                    {playingIndex === index ? "🔊" : "▶️"}
-                  </button>
-                )}
+                {(message.sender === "bot" || message.sender === "system") &&
+                  !message.isError && (
+                    <button
+                      className="play-button"
+                      title="Listen to message"
+                      onClick={() => handlePlayTTS(message.text, index)}
+                      disabled={playingIndex === index}
+                      aria-label={
+                        playingIndex === index
+                          ? "Playing message"
+                          : "Play message"
+                      }
+                    >
+                      {playingIndex === index ? "🔊" : "▶️"}
+                    </button>
+                  )}
                 <div
                   className={`message ${
                     message.sender === "user"
@@ -480,8 +500,10 @@ export default function ChatPage() {
                       ? "system-message"
                       : "bot-message"
                   } ${message.isHidden ? "hidden-message" : ""} ${
-                    message.questionType && isAssessmentQuestion(message.questionType) 
-                      ? "assessment-question" : ""
+                    message.questionType &&
+                    isAssessmentQuestion(message.questionType)
+                      ? "assessment-question"
+                      : ""
                   }`}
                 >
                   {message.isHidden ? (
@@ -516,34 +538,36 @@ export default function ChatPage() {
           <div className="timer-display">
             <span className="timer-icon">⏱️</span>
             <span className="timer-text">
-              {timerStarted 
-                ? `Time remaining: ${timeRemaining}s` 
-                : "Click microphone to start timer"
-              }
+              {timerStarted
+                ? `Time remaining: ${timeRemaining}s`
+                : "Click microphone to start timer"}
             </span>
           </div>
         </div>
       )}
 
       {/* Assessment Instructions */}
-      {isAssessmentQuestion(currentQuestionType) && currentAssessmentBehavior && (
-        <div className="assessment-instructions">
-          <div className="instruction-content">
-            <span className="question-type-indicator">
-              {getQuestionTypeDisplay(currentQuestionType)}
-            </span>
-            {currentAssessmentBehavior.requiresVoice && (
-              <span className="voice-only-indicator">🎤 Voice response required</span>
-            )}
-            {currentAssessmentBehavior.hasTimer && (
-              <span className="timer-indicator">⏱️ Timed question</span>
-            )}
-            {currentAssessmentBehavior.hideAfterDelay && (
-              <span className="memory-indicator">🧠 Remember the words</span>
-            )}
+      {isAssessmentQuestion(currentQuestionType) &&
+        currentAssessmentBehavior && (
+          <div className="assessment-instructions">
+            <div className="instruction-content">
+              <span className="question-type-indicator">
+                {getQuestionTypeDisplay(currentQuestionType)}
+              </span>
+              {currentAssessmentBehavior.requiresVoice && (
+                <span className="voice-only-indicator">
+                  🎤 Voice response required
+                </span>
+              )}
+              {currentAssessmentBehavior.hasTimer && (
+                <span className="timer-indicator">⏱️ Timed question</span>
+              )}
+              {currentAssessmentBehavior.hideAfterDelay && (
+                <span className="memory-indicator">🧠 Remember the words</span>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div className="input-container">
         <div className="input-wrapper">
@@ -612,6 +636,14 @@ export default function ChatPage() {
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22,2 15,22 11,13 2,9"></polygon>
             </svg>
+          </button>
+          <button
+            onClick={startDementiaAssessmnt}
+            className="action-button send-button"
+            title="Start Assessment"
+            aria-label="Start Assessment"
+          >
+            Start Assessment
           </button>
         </div>
       </div>
