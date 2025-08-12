@@ -2,21 +2,111 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import Header from "../shared/Header";
 import "./ChatPage.css";
 import { ChatApi } from "../../api/ChatApi";
-import {
-  AppContext,
-  AppContextProvider,
-} from "../../contexts/AppContextProvider";
+import { AppContext } from "../../contexts/AppContextProvider";
 import { TTS } from "../../api/ttsApi";
 import { playAudioFromBase64 } from "../../utils/audioPlayer";
 import { STT } from "../../api/sttApi";
 
 // Question type enum matching your backend
 const AssessmentQuestionType = {
-  Standard: 0, // Regular chat message
-  SimpleAssessment: 1, // Question 1: Day of week - read aloud, stays visible, text/verbal response
-  MemoryRecall: 2, // Question 2: Three words - read aloud, hidden after 3s, text/verbal response
-  VerbalOnly: 3, // Question 3: Count backwards - read aloud, stays visible, verbal response only
-  TimedVerbal: 4, // Question 4: Animals naming - read aloud, stays visible, verbal response with 30s timer
+  Standard: 0,
+  SimpleAssessment: 1,
+  MemoryRecall: 2,
+  VerbalOnly: 3,
+  TimedVerbal: 4,
+};
+
+// Lightweight SVGs (inline, no external deps)
+const Icon = {
+  // Speaker with waves
+  speaker: (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M11 5L6 9H3v6h3l5 4V5z"></path>
+      <path d="M15.54 8.46a5 5 0 010 7.07M18.07 5.93a9 9 0 010 12.73"></path>
+    </svg>
+  ),
+  // Simple play triangle (used as alt state)
+  play: (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  ),
+  // Microphone
+  mic: (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M5 10a7 7 0 0014 0" />
+      <path d="M12 19v3" />
+    </svg>
+  ),
+  // Stop (recording)
+  stop: (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="black"
+      aria-hidden="true"
+    >
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+  ),
+  // User avatar (outline person)
+  user: (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  // Bot avatar (rounded square with face)
+  bot: (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="4" width="18" height="14" rx="4" />
+      <path d="M12 4V2" />
+      <circle cx="9" cy="11" r="1.5" />
+      <circle cx="15" cy="11" r="1.5" />
+    </svg>
+  ),
 };
 
 export default function ChatPage() {
@@ -84,7 +174,6 @@ export default function ChatPage() {
 
   const startDementiaAssessmnt = (e) => {
     e.preventDefault();
-
     handleSubmit(null, true);
   };
 
@@ -116,10 +205,8 @@ export default function ChatPage() {
     setCurrentAssessmentBehavior(behavior);
 
     if (behavior) {
-      // Handle text input restriction for verbal-only questions
       setIsTextInputDisabled(behavior.requiresVoice);
 
-      // Handle read aloud
       if (behavior.requiresReadAloud) {
         try {
           const ttsResponse = await synthesize(responseData.message);
@@ -129,16 +216,10 @@ export default function ChatPage() {
         }
       }
 
-      // Handle hiding after delay (for memory recall questions)
       if (behavior.hideAfterDelay && behavior.hideDelaySeconds) {
         setTimeout(() => {
-          // Update the last bot message to show it's hidden
           setChatMessages((prevMessages) => {
-            console.log("prevMessages");
-            console.log(prevMessages);
             const newMessages = [...prevMessages];
-            console.log("newMessages");
-            console.log(newMessages);
             if (lastBotMessageIndex !== null) {
               newMessages[newMessages.length - 1] = {
                 ...newMessages[newMessages.length - 1],
@@ -150,12 +231,11 @@ export default function ChatPage() {
         }, behavior.hideDelaySeconds * 1000);
       }
 
-      // Handle timer (for timed verbal questions)
       if (behavior.hasTimer && behavior.timerDurationSeconds) {
         setTimeRemaining(behavior.timerDurationSeconds);
         setShowTimer(true);
-        setTimerStarted(false); // Don't start timer until recording starts
-        setTimerExpiredSent(false); // Reset timer expired flag
+        setTimerStarted(false);
+        setTimerExpiredSent(false);
       }
     }
   };
@@ -187,7 +267,6 @@ export default function ChatPage() {
     setInput("");
     setIsLoading(true);
 
-    // Clear timer if active
     if (showTimer) {
       setShowTimer(false);
       setTimerStarted(false);
@@ -198,13 +277,8 @@ export default function ChatPage() {
     }
 
     try {
-      // Pass the current user's ID to the chat API
       const data = await sendMessage(userMessage.text, currentUser?.id);
 
-      console.log("chatbot response:");
-      console.log(data);
-
-      // Handle response format
       const botMessage = {
         text: data.message || "Sorry, I couldn't process that request.",
         sender: "bot",
@@ -218,15 +292,11 @@ export default function ChatPage() {
         return newMessages;
       });
 
-      // Store the index AFTER setting messages, so we have the correct index
       setLastBotMessageIndex(chatMessages.length);
 
-      // Handle assessment question behavior
       if (isAssessmentQuestion(data.questionType)) {
-        console.log("Processing assessment question type:", data.questionType);
         await handleAssessmentResponse(data);
       } else {
-        // Reset assessment state for standard messages
         setCurrentQuestionType(AssessmentQuestionType.Standard);
         setCurrentAssessmentBehavior(null);
         setIsTextInputDisabled(false);
@@ -273,7 +343,6 @@ export default function ChatPage() {
           },
         });
 
-        // Use default AudioContext (don't force sample rate)
         const audioContext = new (window.AudioContext ||
           window.webkitAudioContext)();
 
@@ -284,21 +353,13 @@ export default function ChatPage() {
         const originalSampleRate = audioContext.sampleRate;
         const targetSampleRate = 16000;
 
-        console.log(
-          `Original sample rate: ${originalSampleRate}Hz, target: ${targetSampleRate}Hz`
-        );
-
         processor.onaudioprocess = (e) => {
           const inputData = e.inputBuffer.getChannelData(0);
-
-          // Downsample from original rate to 16kHz
           const downsampledData = downsample(
             inputData,
             originalSampleRate,
             targetSampleRate
           );
-
-          // Convert Float32Array to Int16Array for WAV
           const int16Data = new Int16Array(downsampledData.length);
           for (let i = 0; i < downsampledData.length; i++) {
             int16Data[i] = Math.max(
@@ -314,12 +375,10 @@ export default function ChatPage() {
 
         setIsRecording(true);
 
-        // Start timer for timed questions when recording starts
         if (showTimer && !timerStarted) {
           setTimerStarted(true);
         }
 
-        // Store references for stopping
         window.currentRecording = {
           stream,
           audioContext,
@@ -330,7 +389,6 @@ export default function ChatPage() {
         console.error("Microphone access error:", err);
       }
     } else {
-      // Stop recording and process audio
       if (window.currentRecording) {
         const { stream, audioContext, processor, audioChunks } =
           window.currentRecording;
@@ -339,7 +397,6 @@ export default function ChatPage() {
         audioContext.close();
         stream.getTracks().forEach((track) => track.stop());
 
-        // Create WAV file at 16kHz
         const wavBlob = createWavFile(audioChunks, 16000);
         const file = new File([wavBlob], "recording.wav", {
           type: "audio/wav",
@@ -355,9 +412,7 @@ export default function ChatPage() {
           const transcribedText = sttResponse?.transcription || "";
           setInput(transcribedText);
 
-          // For voice-only questions, auto-submit after transcription
           if (isTextInputDisabled && transcribedText.trim()) {
-            // Wait a bit for the input to be set, then submit
             setTimeout(() => {
               const submitEvent = { preventDefault: () => {} };
               handleSubmit(submitEvent);
@@ -367,32 +422,26 @@ export default function ChatPage() {
           console.error("STT error:", err);
         }
 
-        // Clean up
         delete window.currentRecording;
       }
       setIsRecording(false);
     }
   };
 
-  // Simple downsampling function
   function downsample(inputData, originalRate, targetRate) {
     if (originalRate === targetRate) {
       return inputData;
     }
-
     const ratio = originalRate / targetRate;
     const outputLength = Math.floor(inputData.length / ratio);
     const outputData = new Float32Array(outputLength);
-
     for (let i = 0; i < outputLength; i++) {
       const sourceIndex = Math.floor(i * ratio);
       outputData[i] = inputData[sourceIndex];
     }
-
     return outputData;
   }
 
-  // Helper function to create WAV file at 16kHz
   function createWavFile(audioChunks, sampleRate) {
     const totalLength = audioChunks.reduce(
       (sum, chunk) => sum + chunk.length,
@@ -401,7 +450,6 @@ export default function ChatPage() {
     const arrayBuffer = new ArrayBuffer(44 + totalLength * 2);
     const view = new DataView(arrayBuffer);
 
-    // WAV header
     const writeString = (offset, string) => {
       for (let i = 0; i < string.length; i++) {
         view.setUint8(offset + i, string.charCodeAt(i));
@@ -413,16 +461,15 @@ export default function ChatPage() {
     writeString(8, "WAVE");
     writeString(12, "fmt ");
     view.setUint32(16, 16, true);
-    view.setUint32(20, 1, true); // PCM format
-    view.setUint16(22, 1, true); // Mono channel
-    view.setUint32(24, sampleRate, true); // 16000 Hz sample rate
-    view.setUint32(28, sampleRate * 2, true); // Byte rate
-    view.setUint16(32, 2, true); // Block align
-    view.setUint16(34, 16, true); // Bits per sample
+    view.setUint32(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
     writeString(36, "data");
     view.setUint32(40, totalLength * 2, true);
 
-    // Audio data
     let offset = 44;
     audioChunks.forEach((chunk) => {
       for (let i = 0; i < chunk.length; i++) {
@@ -449,9 +496,23 @@ export default function ChatPage() {
     }
   };
 
+  // Small avatar next to message
+  const Avatar = ({ sender }) => (
+    <div
+      className={`message-avatar ${
+        sender === "user" ? "user-avatar" : "bot-avatar"
+      }`}
+      aria-hidden
+    >
+      {sender === "user" ? Icon.user : Icon.bot}
+    </div>
+  );
+
   return (
     <div className="chat-container">
+      {/* Header already styled via CSS; we add a title icon via CSS ::before */}
       <Header title="AI Assistant" />
+
       <div className="messages-container">
         <div className="messages-list">
           {chatMessages.length === 0 ? (
@@ -465,31 +526,33 @@ export default function ChatPage() {
             chatMessages.map((message, index) => (
               <div
                 key={index}
-                className={`message-wrapper ${
-                  message.sender === "user"
-                    ? "user-message-wrapper"
-                    : message.sender === "system"
-                    ? "bot-message-wrapper"
-                    : "bot-message-wrapper"
+                className={`message-row ${
+                  message.sender === "user" ? "user-row" : "bot-row"
                 }`}
               >
-                {/* Bot play button with enhanced styling */}
-                {(message.sender === "bot" || message.sender === "system") &&
-                  !message.isError && (
-                    <button
-                      className="play-button"
-                      title="Listen to message"
-                      onClick={() => handlePlayTTS(message.text, index)}
-                      disabled={playingIndex === index}
-                      aria-label={
-                        playingIndex === index
-                          ? "Playing message"
-                          : "Play message"
-                      }
-                    >
-                      {playingIndex === index ? "🔊" : "▶️"}
-                    </button>
-                  )}
+                {/* Left-side cluster for bot/system: avatar + TTS */}
+                {(message.sender === "bot" || message.sender === "system") && (
+                  <div className="left-cluster">
+                    <Avatar sender="bot" />
+                    {!message.isError && (
+                      <button
+                        className="play-button"
+                        title="Listen to message"
+                        onClick={() => handlePlayTTS(message.text, index)}
+                        disabled={playingIndex === index}
+                        aria-label={
+                          playingIndex === index
+                            ? "Playing message"
+                            : "Play message"
+                        }
+                      >
+                        {Icon.play}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Bubble */}
                 <div
                   className={`message ${
                     message.sender === "user"
@@ -514,11 +577,21 @@ export default function ChatPage() {
                     message.text
                   )}
                 </div>
+
+                {/* Right-side avatar for user messages */}
+                {message.sender === "user" && (
+                  <div className="right-cluster">
+                    <Avatar sender="user" />
+                  </div>
+                )}
               </div>
             ))
           )}
           {isLoading && (
-            <div className="message-wrapper bot-message-wrapper">
+            <div className="message-row bot-row">
+              <div className="left-cluster">
+                <Avatar sender="bot" />
+              </div>
               <div className="message bot-message">
                 <div className="typing-indicator">
                   <span></span>
@@ -596,7 +669,6 @@ export default function ChatPage() {
               opacity: isTextInputDisabled ? 0.5 : 1,
             }}
             onInput={(e) => {
-              // Auto-resize textarea
               e.target.style.height = "auto";
               e.target.style.height =
                 Math.min(e.target.scrollHeight, 120) + "px";
@@ -614,7 +686,7 @@ export default function ChatPage() {
               isRecording ? "Stop recording" : "Start voice recording"
             }
           >
-            {isRecording ? "⏹️" : "🎤"}
+            {isRecording ? Icon.stop : Icon.mic}
           </button>
           <button
             onClick={handleSubmit}

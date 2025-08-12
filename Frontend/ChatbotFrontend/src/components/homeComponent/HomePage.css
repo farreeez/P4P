@@ -397,3 +397,72 @@
     animation: none;
   }
 }
+
+/* =========================
+   ChatPage.css (append/replace parts)
+   NOTE: Copy the sections below into your ChatPage.css. They rely on your
+   existing variables and colors. No functional logic changed.
+========================= */
+
+/* --- NEW: Header title icon (page logo) --- */
+/* Adds a small chat-logo to the left of the H1 without touching Header.jsx */
+:global(.chat-header) h1::before {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  vertical-align: -4px;
+  /* Simple chat bubble SVG as data URI to avoid assets */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* If :global is not supported in your build, replace the selector above with
+   .chat-header h1::before { ... } to match your existing CSS. */
+
+/* Rows layout */
+.message-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* default (bot rows) */
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* For user rows: push the bubble to the right */
+.user-row {
+  justify-items: end;
+  grid-template-columns: 1fr auto auto; /* spacer | bubble | avatar */
+}
+
+.bot-row { justify-items: start; }
+
+.left-cluster, .right-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- NEW: Avatars --- */
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+.user-avatar {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #4f46e5 100%);
+  color: #fff;
+}
+.bot-avatar {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  color: #fff;
+}
+/* Ensure the SVG is visible on the green gradient */
+.play-button { color: #fff; }
