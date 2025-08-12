@@ -43,8 +43,8 @@ function App() {
               </PrivateRoute>
             }
           >
-            <Route path="home" element={<HomePage />} />
             <Route path="chat" element={<ChatPage />} />
+            <Route path="menu" element={<HomePage />} />
             <Route path="exercises" element={<BrainExercisesPage />} />
             <Route path="reminders" element={<CalendarPage />} />
             <Route path="settings" element={<div>Coming Soon: Settings</div>} />

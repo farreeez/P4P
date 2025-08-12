@@ -50,9 +50,8 @@ export default function LoginPage() {
 			const loggedInUser = await loginUser(formData);
 			login(loggedInUser?.user);
 
-			// TODO: Route to home page (CHANGE LATER)
 			toast.success(`Welcome back, ${loggedInUser?.user.fullName}!`);
-			navigate("/app/dashboard");
+			navigate("/app/chat");
 		} catch {
 			toast.error("Invalid email or password");
 		}

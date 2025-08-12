@@ -10,10 +10,15 @@ export default function Header({ title }) {
     useContext(FontSizeContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const isHomePage = location.pathname === "/app/home" || location.pathname === "/app/dashboard";
+  const isChatPage = location.pathname === "/app/chat";
+  const isMenuPage = location.pathname === "/app/menu";
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleMenu = () => {
+    navigate("/app/menu");
   };
 
   const handleLogout = () => {
@@ -25,9 +30,9 @@ export default function Header({ title }) {
     <div className="app-header">
       <div className="header-left">
         <h1>{title}</h1>
-        {!isHomePage && (
-          <button 
-            className="header-button back-button" 
+        {!isMenuPage && !isChatPage && (
+          <button
+            className="header-button back-button"
             onClick={handleBack}
             aria-label="Go back to previous page"
           >
@@ -45,8 +50,30 @@ export default function Header({ title }) {
             <span>Back</span>
           </button>
         )}
+        {isChatPage && (
+          <button
+            className="header-button back-button"
+            onClick={handleMenu}
+            aria-label="Open main menu"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span>Menu</span>
+          </button>
+        )}
       </div>
-      
+
       <div className="font-buttons-container">
         <button
           className="header-button logout-button"
@@ -68,9 +95,9 @@ export default function Header({ title }) {
           </svg>
           <span>Logout</span>
         </button>
-        
-        <button 
-          className="font-button" 
+
+        <button
+          className="font-button"
           onClick={increaseFontSize}
           aria-label="Increase font size"
           title="Increase text size"
@@ -90,9 +117,9 @@ export default function Header({ title }) {
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
         </button>
-        
-        <button 
-          className="font-button" 
+
+        <button
+          className="font-button"
           onClick={decreaseFontSize}
           aria-label="Decrease font size"
           title="Decrease text size"

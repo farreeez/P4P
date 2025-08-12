@@ -836,3 +836,7 @@
     border-color: #f59e0b;
   }
 }
+.play-button svg {
+  min-width: 20px;
+  min-height: 20px;
+}
