@@ -9,5 +9,5 @@ import { Navigate } from "react-router-dom";
  */
 export default function PublicRoute({ children }) {
 	const { currentUser } = useContext(AppContext);
-	return currentUser ? <Navigate to="/app/home" replace /> : children;
+	return currentUser ? <Navigate to="/app/chat" replace /> : children;
 }

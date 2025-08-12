@@ -3,7 +3,7 @@ import { createContext, useState, useEffect } from "react";
 export const FontSizeContext = createContext();
 
 export function FontSizeProvider({ children }) {
-  const [fontSize, setFontSize] = useState(16);
+  const [fontSize, setFontSize] = useState(20)
 
   useEffect(() => {
     document.documentElement.style.setProperty(

@@ -559,7 +559,7 @@ export default function ChatPage() {
             placeholder={
               isTextInputDisabled
                 ? "Voice response required - use microphone"
-                : "Type your message here... (Press Enter to send, Shift+Enter for new line)"
+                : "Type your message here..."
             }
             className="message-input"
             rows="1"

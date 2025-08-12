@@ -227,8 +227,8 @@
 }
 
 .menu-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   position: relative;
   z-index: 2;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -301,8 +301,8 @@
   }
   
   .menu-icon {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
   }
   
   .menu-label {
@@ -337,8 +337,8 @@
   }
   
   .menu-icon {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
   }
   
   .menu-label {
