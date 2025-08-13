@@ -110,7 +110,7 @@ const Icon = {
 };
 
 export default function ChatPage() {
-  const { chatMessages, setChatMessages, currentUser } = useContext(AppContext);
+  const { chatMessages, setChatMessages, currentUser, ttsSpeed, setTtsSpeed } = useContext(AppContext);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -428,6 +428,13 @@ export default function ChatPage() {
     }
   };
 
+  const adjustTTSSpeed = (increment) => {
+    setTtsSpeed(prev => {
+      const newSpeed = Math.round((prev + increment) * 10) / 10;
+      return Math.min(Math.max(newSpeed, 0.4), 2.0);
+    });
+  };
+
   function downsample(inputData, originalRate, targetRate) {
     if (originalRate === targetRate) {
       return inputData;
@@ -643,6 +650,26 @@ export default function ChatPage() {
         )}
 
       <div className="input-container">
+        <div className="speed-control-wrapper">
+          <span className="speed-label">Speech Speed:</span>
+          <button
+            onClick={() => adjustTTSSpeed(-0.1)}
+            className="action-button speed-button"
+            title="Decrease Speed"
+            aria-label="Decrease speech speed"
+          >
+            -
+          </button>
+          <span className="speed-value">{ttsSpeed.toFixed(1)}x</span>
+          <button
+            onClick={() => adjustTTSSpeed(0.1)}
+            className="action-button speed-button"
+            title="Increase Speed"
+            aria-label="Increase speech speed"
+          >
+            +
+          </button>
+        </div>
         <div className="input-wrapper">
           <textarea
             value={input}

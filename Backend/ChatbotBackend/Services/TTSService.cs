@@ -48,13 +48,15 @@ namespace ChatbotBackend.LLMServices
         /// <param name="voiceName">Specific voice name (optional)</param>
         /// <param name="voiceGender">Voice gender preference</param>
         /// <param name="audioEncoding">Audio encoding format</param>
+        /// <param name="speechRate">Speech rate (default is 1.0)</param>
         /// <returns>Audio content as byte array</returns>
         public async Task<byte[]> ConvertTextToSpeechAsync(
             string text,
             string languageCode = "en-AU",
             string? voiceName = null,
             SsmlVoiceGender voiceGender = SsmlVoiceGender.Neutral,
-            AudioEncoding audioEncoding = AudioEncoding.Mp3)
+            AudioEncoding audioEncoding = AudioEncoding.Mp3,
+            double speechRate = 1.0)
         {
             try
             {
@@ -77,10 +79,11 @@ namespace ChatbotBackend.LLMServices
                     voice.Name = voiceName;
                 }
 
-                // Create audio config
+                // Create audio config with speech rate
                 var config = new AudioConfig
                 {
-                    AudioEncoding = audioEncoding
+                    AudioEncoding = audioEncoding,
+                    SpeakingRate = speechRate
                 };
 
                 // Perform the text-to-speech request
@@ -110,13 +113,15 @@ namespace ChatbotBackend.LLMServices
         /// <param name="voiceName">Specific voice name (optional)</param>
         /// <param name="voiceGender">Voice gender preference</param>
         /// <param name="audioEncoding">Audio encoding format</param>
+        /// <param name="speechRate">Speech rate (default is 1.0)</param>
         /// <returns>Audio content as byte array</returns>
         public async Task<byte[]> ConvertSsmlToSpeechAsync(
             string ssml,
             string languageCode = "en-AU",
             string? voiceName = null,
             SsmlVoiceGender voiceGender = SsmlVoiceGender.Neutral,
-            AudioEncoding audioEncoding = AudioEncoding.Mp3)
+            AudioEncoding audioEncoding = AudioEncoding.Mp3,
+            double speechRate = 1.0)
         {
             try
             {
@@ -139,10 +144,11 @@ namespace ChatbotBackend.LLMServices
                     voice.Name = voiceName;
                 }
 
-                // Create audio config
+                // Create audio config with speech rate
                 var config = new AudioConfig
                 {
-                    AudioEncoding = audioEncoding
+                    AudioEncoding = audioEncoding,
+                    SpeakingRate = speechRate
                 };
 
                 // Perform the text-to-speech request

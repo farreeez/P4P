@@ -41,20 +41,22 @@ namespace ChatbotBackend.Controllers
                 if (request.IsSSML)
                 {
                     audioContent = await _ttsService.ConvertSsmlToSpeechAsync(
-                        request.Text,
-                        request.LanguageCode,
-                        request.VoiceName,
-                        voiceGender,
-                        audioEncoding);
+                        ssml: request.Text,
+                        languageCode: request.LanguageCode,
+                        voiceName: request.VoiceName,
+                        voiceGender: voiceGender,
+                        audioEncoding: audioEncoding,
+                        speechRate: request.SpeechRate);
                 }
                 else
                 {
                     audioContent = await _ttsService.ConvertTextToSpeechAsync(
-                        request.Text,
-                        request.LanguageCode,
-                        request.VoiceName,
-                        voiceGender,
-                        audioEncoding);
+                        text: request.Text,
+                        languageCode: request.LanguageCode,
+                        voiceName: request.VoiceName,
+                        voiceGender: voiceGender,
+                        audioEncoding: audioEncoding,
+                        speechRate: request.SpeechRate);
                 }
 
                 // Convert to base64 for JSON response
@@ -108,7 +110,8 @@ namespace ChatbotBackend.Controllers
                         request.LanguageCode,
                         request.VoiceName,
                         voiceGender,
-                        audioEncoding);
+                        audioEncoding,
+                        request.SpeechRate);
                 }
                 else
                 {
@@ -117,7 +120,8 @@ namespace ChatbotBackend.Controllers
                         request.LanguageCode,
                         request.VoiceName,
                         voiceGender,
-                        audioEncoding);
+                        audioEncoding,
+                        request.SpeechRate);
                 }
 
                 // Determine content type based on audio encoding
@@ -203,7 +207,8 @@ namespace ChatbotBackend.Controllers
                     request.LanguageCode ?? "en-AU",
                     request.VoiceName,
                     voiceGender,
-                    audioEncoding);
+                    audioEncoding,
+                    request.SpeechRate);
 
                 // Convert to base64 for JSON response
                 var audioBase64 = Convert.ToBase64String(audioContent);
@@ -240,5 +245,20 @@ namespace ChatbotBackend.Controllers
         public string? VoiceName { get; set; }
         public string? VoiceGender { get; set; }
         public string? AudioEncoding { get; set; }
+        [Range(0.25, 4.0)]
+        public double SpeechRate { get; set; } = 1.0;
+    }
+    
+    public class TextToSpeechRequest
+    {
+        [Required]
+        public required string Text { get; set; }
+        public required string LanguageCode { get; set; }
+        public string VoiceName { get; set; } = null!;
+        public string VoiceGender { get; set; } = "Neutral";
+        public string AudioEncoding { get; set; } = "MP3";
+        public bool IsSSML { get; set; }
+        [Range(0.25, 4.0)]
+        public double SpeechRate { get; set; } = 1.0;
     }
 }

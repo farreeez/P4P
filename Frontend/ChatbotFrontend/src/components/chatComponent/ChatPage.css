@@ -399,7 +399,6 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 20px;
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
@@ -464,7 +463,55 @@
   opacity: 0.6;
 }
 
-/* Responsive design */
+/* Speed Control Styles */
+.speed-control-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 16px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.speed-label {
+  color: white;
+  font-size: var(--adjustable-font-size);
+  white-space: nowrap;
+}
+
+.speed-value {
+  color: white;
+  font-size: var(--adjustable-font-size);
+  font-weight: 600;
+  min-width: 48px;
+  text-align: center;
+}
+
+.speed-button {
+  width: 36px !important;
+  height: 36px !important;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #4f46e5 100%);
+  color: white;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.speed-button:hover {
+  background: linear-gradient(135deg, var(--primary-blue-hover) 0%, #4338ca 100%);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+/* Update input container to accommodate speed controls */
+.input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-header {
     padding: 16px 20px;
@@ -491,6 +538,14 @@
     width: 44px;
     height: 44px;
     font-size: 20px;
+  }
+  
+  .speed-control-wrapper {
+    margin-right: 12px;
+  }
+  
+  .speed-label {
+    display: none;
   }
 }
 
@@ -519,6 +574,15 @@
     height: 40px;
     font-size: 18px;
     margin: 0 3px;
+  }
+  
+  .speed-control-wrapper {
+    margin-right: 8px;
+  }
+  
+  .speed-button {
+    width: 32px !important;
+    height: 32px !important;
   }
 }
 

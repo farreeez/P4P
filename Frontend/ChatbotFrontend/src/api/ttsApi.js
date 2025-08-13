@@ -1,5 +1,7 @@
 import createAsync from "../hooks/CreateAsync.js";
 import getAsync from "../hooks/GetAsync.js";
+import { AppContext } from "../contexts/AppContextProvider.jsx";
+import { useContext } from "react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_TTS_URL = `${API_BASE_URL}/api/tts`;
@@ -9,6 +11,7 @@ export class TTS {
    * Convert text to speech and get base64 audio
    */
   static synthesizeAsync() {
+    const { ttsSpeed } = useContext(AppContext);
     const { data, isLoading, isError, post } = createAsync();
 
     async function synthesize(text, options = {}) {
@@ -18,7 +21,8 @@ export class TTS {
         voiceName: options.voiceName ?? "en-AU-Chirp3-HD-Kore",
         voiceGender: options.voiceGender ?? "Female",
         audioEncoding: options.audioEncoding ?? "MP3",
-        isSSML: options.isSSML ?? false
+        isSSML: options.isSSML ?? false,
+        SpeechRate: ttsSpeed,
       };
 
       const response = await post(`${API_TTS_URL}/synthesize`, request);
@@ -41,11 +45,11 @@ export class TTS {
         voiceName: options.voiceName ?? "en-AU-Chirp3-HD-Kore",
         voiceGender: options.voiceGender ?? "Female",
         audioEncoding: options.audioEncoding ?? "MP3",
-        isSSML: options.isSSML ?? false
+        isSSML: options.isSSML ?? false,
       };
 
       const response = await post(`${API_TTS_URL}/synthesize/audio`, request, {
-        responseType: 'blob'
+        responseType: "blob",
       });
       return response;
     }
@@ -61,7 +65,9 @@ export class TTS {
 
     async function getVoices(languageCode = null) {
       const url = languageCode
-        ? `${API_TTS_URL}/voices?languageCode=${encodeURIComponent(languageCode)}`
+        ? `${API_TTS_URL}/voices?languageCode=${encodeURIComponent(
+            languageCode
+          )}`
         : `${API_TTS_URL}/voices`;
       const voices = await fetch(url);
       return voices ?? { voices: [] };
@@ -82,7 +88,7 @@ export class TTS {
         languageCode: options.languageCode,
         voiceName: options.voiceName,
         voiceGender: options.voiceGender,
-        audioEncoding: options.audioEncoding
+        audioEncoding: options.audioEncoding,
       };
 
       const response = await post(`${API_TTS_URL}/chat-to-speech`, request);
