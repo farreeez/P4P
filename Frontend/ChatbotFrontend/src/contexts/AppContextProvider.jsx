@@ -7,6 +7,7 @@ export const AppContext = createContext({
 	logout: () => {},
 	chatMessages: [],
 	setChatMessages: () => {},
+	ttsSpeed: 1.0,
 });
 
 /**
@@ -18,6 +19,7 @@ export function AppContextProvider({ children }) {
 		return storedUser ? JSON.parse(storedUser) : null;
 	});
 	const [chatMessages, setChatMessages] = useState([]);
+	const [ttsSpeed, setTtsSpeed] = useState(1.0);
 
 
 	// Update localStorage whenever currentUser
@@ -52,6 +54,8 @@ export function AppContextProvider({ children }) {
 		logout,
 		chatMessages,
 		setChatMessages,
+		ttsSpeed,
+		setTtsSpeed
 	};
 
 	return (
