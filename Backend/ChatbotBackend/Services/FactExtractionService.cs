@@ -6,7 +6,6 @@ using ChatbotBackend.Repositories;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.SemanticKernel.Connectors.Google;
-using static Google.Apis.Requests.BatchRequest;
 
 namespace ChatbotBackend.Services
 {
@@ -40,6 +39,7 @@ namespace ChatbotBackend.Services
                 return;
             }
 
+            // Create a temporary ChatHistory for this specific task
             var chatHistory = new ChatHistory();
             chatHistory.AddSystemMessage($@"
 You are a fact extraction assistant. Your task is to analyze user messages and extract structured facts about them.
@@ -69,7 +69,7 @@ User's message: ""{userMessage}""
             try
             {
                 var result = await _chatCompletionService.GetChatMessageContentAsync(
-                    chatHistory,
+                    chatHistory, // Pass the temporary chat history
                     executionSettings,
                     kernel: _kernel);
 

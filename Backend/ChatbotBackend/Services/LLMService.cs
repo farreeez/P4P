@@ -7,22 +7,39 @@ using System.ComponentModel;
 using System.Text.Json;
 using ChatbotBackend.Model;
 using ChatbotBackend.Repositories;
+using ChatbotBackend.Services;
+using Microsoft.SemanticKernel.Embeddings;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.Extensions.Configuration;
+using Microsoft.SemanticKernel.Connectors.Google;
+using Microsoft.Extensions.AI;
+using System.ComponentModel;
+using System.Text.Json;
+using ChatbotBackend.Model;
+using ChatbotBackend.Repositories;
 
 public class LLMService
 {
-    private readonly Kernel _kernel;
+    
+            private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatService;
-    private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
+    private readonly ITextEmbeddingGenerationService _embeddingGenerator; // Corrected interface type
     private readonly ICalendarRepository _calendarRepository;
-    private readonly IUserRepository _userRepository; // Already injected [cite: 337, 338, 339]
+    private readonly IUserRepository _userRepository;
+    private readonly FactExtractionService _factExtractionService;
+    private readonly ChatHistoryManager _chatHistoryManager;
     private readonly string _apiKey;
     private readonly string _modelId;
     private readonly string _embeddingModelId;
 
-    public LLMService(IConfiguration configuration, ICalendarRepository calendarRepository, IUserRepository userRepository)
+    public LLMService(IConfiguration configuration, ICalendarRepository calendarRepository, IUserRepository userRepository, FactExtractionService factExtractionService, ChatHistoryManager chatHistoryManager, ITextEmbeddingGenerationService embeddingGenerator)
     {
         _calendarRepository = calendarRepository;
         _userRepository = userRepository;
+        _factExtractionService = factExtractionService;
+        _chatHistoryManager = chatHistoryManager;
+        _embeddingGenerator = embeddingGenerator; // The dependency is now of the correct type
         _apiKey = configuration["GoogleGenerativeAI:ApiKey"];
         _modelId = configuration["GoogleGenerativeAI:ModelId"];
         _embeddingModelId = configuration["GoogleGenerativeAI:EmbeddingModelId"] ?? _modelId;
@@ -33,99 +50,44 @@ public class LLMService
         }
         if (string.IsNullOrEmpty(_modelId))
         {
-            throw new InvalidOperationException("Google Generative AI Model ID for chat is missing or incomplete.");
+            throw new InvalidOperationException("Google Generative AI Model ID is missing or incomplete.");
         }
 
-        var kernelBuilder = Kernel.CreateBuilder()
-            .AddGoogleAIGeminiChatCompletion(
-                modelId: _modelId,
-                apiKey: _apiKey);
-        _kernel = kernelBuilder.Build();
-
-        _kernel.Plugins.AddFromObject(new CalendarFunctions(_calendarRepository, _userRepository));
+        _kernel = Kernel.CreateBuilder()
+            .AddGoogleAIGeminiChatCompletion(modelId: _modelId, apiKey: _apiKey)
+            .Build();
         _chatService = _kernel.GetRequiredService<IChatCompletionService>();
 
-        IKernelBuilder embeddingKernelBuilder = Kernel.CreateBuilder()
-            .AddGoogleAIEmbeddingGenerator(
-                modelId: _embeddingModelId,
-                apiKey: _apiKey);
-        Kernel embeddingKernel = embeddingKernelBuilder.Build();
-        _embeddingGenerator = embeddingKernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+        // Register your tools
+        _kernel.ImportPluginFromObject(this);
     }
 
-    /// <summary>
-    /// Gets a response from the LLM with calendar function calling support.
-    /// </summary>
-    /// <param name="userMessage">The user's input message.</param>
-    /// <param name="userId">The current user's ID for calendar operations.</param>
-    /// <returns>The LLM's response content.</returns>
     public async Task<string> GetLLMResponseAsync(string userMessage, string userId)
     {
-        var chatHistory = new ChatHistory();
+        var chatHistory = _chatHistoryManager.GetChatHistory(userId);
 
-        // 1. Retrieve User Profile Facts [New]
-        var user = await _userRepository.GetByIdAsync(userId);
-        var userProfileContext = BuildUserProfileContext(user); // Helper method to build context
+        // First, check if the chat history is empty to add the system message only once.
+        if (!chatHistory.Any())
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            var userProfileContext = BuildUserProfileContext(user);
+            var currentDateTime = DateTime.Now;
 
-        var currentDateTime = DateTime.Now;
-
-        // 2. Inject User Profile Context into System Message [Modified]
-        chatHistory.AddSystemMessage($@"
+            chatHistory.AddSystemMessage($@"
 # Combined AI Assistant System Prompt
-
-You are a helpful AI assistant with both calendar management capabilities and brain health/dementia support features. You can help users with:
-
-## User Profile Information:
+//... (copy the entire system prompt content from the original file here) ...
 {userProfileContext}
 ---
-
-## Calendar Management Capabilities
-PLEASE ONLY MENTION THAT YOU CAN HELP WITH CALENDAR CAPABILITIES ONLY IF THEY ASK FOR SOMETHING RELATED TO CALENDAR EVENTS.
-
-1. Creating calendar events
-2. Viewing their upcoming events
-3. Updating existing events
-4. Deleting events
-5. Searching for events
-
-**Current user ID:** {userId ?? "unknown"}
-
-When users ask about calendar-related tasks, use the appropriate functions to help them.
-Always be helpful and provide clear confirmation of actions taken.
-Format dates and times in a user-friendly way.
-
-If a user is editing or creating an event and did not mention all of the inputs, try to infer the category and description if it is easy to guess what they likely are to make a more seamless user experience.
-Make sure to ask what time the event is if it is not mentioned as it is important to make sure the user chooses the time for the event.
-If a user asks you to add something to their schedule, calendar, routine, or anything along those lines, assume they want you to add an event - there is no need to ask them to specify if they want you to add an event.
-### For creating events, if the user doesn't specify all details:
-- Default start time to the next reasonable hour
-- Default duration to 1 hour if not specified
-- Default category to 'Personal' if not specified
-- Ask for clarification if the date/time is ambiguous
-
-## Brain Health & Dementia Support
-You can provide information, answer questions, and facilitate cognitive stimulation activities.
-If the user expresses interest in playing a brain game (e.g., 'memory game', 'puzzle', 'challenge my brain'), suggest starting a specific activity.
-For example, you could say: 'I can help you with a memory recall activity! Say 'start memory recall activity' to begin.'
-Otherwise, provide helpful and empathetic responses based on the user's query.
-
-## Important Context
-- **Current date and time:** {currentDateTime:yyyy-MM-dd HH:mm:ss} ({currentDateTime:dddd, MMMM d, yyyy})
-- **Current user ID:** {userId ?? "unknown"}
-- **Today is:** {currentDateTime:dddd, MMMM d, yyyy}
-- **Current time:** {currentDateTime:HH:mm}
-
-**Remember:** Today is {currentDateTime:dddd, MMMM d, yyyy} - use this for all relative dates so if they say tomorrow it is the next day etc.
-
-## General Guidelines
-- When searching or listing events, format them nicely with emojis and clear formatting
-- Provide helpful and empathetic responses for brain health queries
-- Be supportive and understanding when working with users who may have cognitive challenges
-- Always be helpful and provide clear confirmation of actions taken
-- Seamlessly transition between calendar management and brain health support based on user needs
+... // Rest of the system prompt
 ");
+        }
 
+        // Add the new user message to the shared chat history.
         chatHistory.AddUserMessage(userMessage);
+
+        // Call the FactExtractionService to update the user profile in the background.
+        // This should not be part of the ChatHistory.
+        _ = _factExtractionService.ExtractAndStoreFactsAsync(userId, userMessage);
 
         var executionSettings = new GeminiPromptExecutionSettings
         {
@@ -136,15 +98,60 @@ Otherwise, provide helpful and empathetic responses based on the user's query.
         try
         {
             var result = await _chatService.GetChatMessageContentAsync(
-                chatHistory,
+                chatHistory, // Pass the shared history with the new message
                 executionSettings,
                 kernel: _kernel);
+
+            // Add the assistant's response to the history for future context.
+            chatHistory.AddAssistantMessage(result?.Content ?? "");
+
             return result?.Content ?? "I apologize, but I couldn't process your request at the moment.";
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error getting LLM response: {ex.Message}");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Searches for calendar events by name or description.
+    /// This method is a KernelFunction that the LLM can call.
+    /// </summary>
+    [KernelFunction("search_events")]
+    [Description("Searches for calendar events by name or description")]
+    public async Task<string> SearchEvents(
+        [Description("User ID")] string userId,
+        [Description("Search term to look for in event names or descriptions")] string searchTerm)
+    {
+        try
+        {
+            var allEvents = await _calendarRepository.GetByUserIdAsync(userId);
+            var matchingEvents = allEvents.Where(e =>
+                e.EventName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                e.EventDescription.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+
+            if (!matchingEvents.Any())
+            {
+                return $"🔍 No events found matching '{searchTerm}'.";
+            }
+
+            var response = $"🔍 Found {matchingEvents.Count} event(s) matching '{searchTerm}':\n\n";
+            foreach (var evt in matchingEvents.OrderBy(e => e.StartTime))
+            {
+                response += $"• **{evt.EventName}** (ID: {evt.Id})\n";
+                response += $"  📅 {evt.EventDate:MMMM d, yyyy}\n";
+                response += $"  🕐 {evt.StartTime:h:mm tt} - {evt.EndTime:h:mm tt}\n";
+                response += $"  📝 {evt.EventDescription}\n\n";
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching for events: {ex.Message}");
+            return "An error occurred while searching for events.";
         }
     }
 
@@ -225,18 +232,21 @@ Otherwise, provide helpful and empathetic responses based on the user's query.
         }
     }
 
-    /// <summary>
-    /// Generates text embeddings using the default dimensions for the configured embedding model.
-    /// </summary>
-    /// <param name="text">The text for which to generate embeddings.</param>
-    /// <returns>A list of Embedding<float> objects containing the generated vectors.</returns>
+
     public async Task<IList<Embedding<float>>> GenerateEmbeddingWithDefaultDimensionsAsync(string text)
     {
         try
         {
-            var embeddings = await _embeddingGenerator.GenerateAsync([text]);
-            Console.WriteLine($"Generated '{embeddings.Count}' embedding(s) with '{embeddings[0].Vector.Length}' dimensions (default) for the provided text");
-            return embeddings;
+            // The correct method is GenerateEmbeddingAsync which takes a string and returns a single ReadOnlyMemory<float>
+            var embedding = await _embeddingGenerator.GenerateEmbeddingAsync(text);
+
+            // The calling method expects an IList<Embedding<float>>, so we wrap the result
+            // in a new Embedding object and then in a new list.
+            var embeddingObject = new Microsoft.Extensions.AI.Embedding<float>(embedding);
+
+            // Log the result and return it as a new list of Embedding<float> objects.
+            Console.WriteLine($"Generated embedding with '{embedding.Length}' dimensions for the provided text");
+            return new List<Microsoft.Extensions.AI.Embedding<float>> { embeddingObject };
         }
         catch (Exception ex)
         {
@@ -244,6 +254,7 @@ Otherwise, provide helpful and empathetic responses based on the user's query.
             throw;
         }
     }
+
 
     /// <summary>
     /// Generates text embeddings using a specified custom dimension size.

@@ -1,7 +1,11 @@
 using ChatbotBackend.LLMServices;
 using ChatbotBackend.Repositories;
-using ChatbotBackend.Services; // Add this using directive
+using ChatbotBackend.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.Google;
+using Microsoft.Extensions.AI;
+using Microsoft.SemanticKernel.Embeddings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,17 +19,38 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register repositories
+// Register ChatHistoryManager as a SINGLETON.
+// This is the CRITICAL change to make sure the chat history is not lost.
+builder.Services.AddSingleton<ChatHistoryManager>();
+
+// Register repositories and core services as Scoped.
+// This is the correct lifetime for services that depend on DbContext or are created per request.
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICalendarRepository, CalendarRepository>();
 
-// Services depending on repositories
+// Register the Embedding Generation service.
+builder.Services.AddScoped<ITextEmbeddingGenerationService>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var apiKey = config["GoogleGenerativeAI:ApiKey"];
+    var modelId = config["GoogleGenerativeAI:ModelId"];
+    var embeddingModelId = config["GoogleGenerativeAI:EmbeddingModelId"] ?? modelId;
+
+    var kernel = Kernel.CreateBuilder()
+        .AddGoogleAIEmbeddingGeneration(embeddingModelId, apiKey)
+        .Build();
+
+    return kernel.GetRequiredService<ITextEmbeddingGenerationService>();
+});
+
+// Services depending on repositories should be scoped.
+// We are reverting the LLMService registration back to scoped to resolve the lifetime conflict.
 builder.Services.AddScoped<LLMService>();
 builder.Services.AddScoped<DementiaAssessmentService>();
 builder.Services.AddScoped<ChatbotCoordinator>();
 builder.Services.AddScoped<FactExtractionService>();
 
-// Other services (keep as singleton **only if** they don't depend on scoped services)
+// Other services.
 builder.Services.AddSingleton<TextToSpeechService>();
 builder.Services.AddSingleton<SpeechToTextService>();
 builder.Services.AddSingleton<CognitiveActivityManager>();
@@ -56,6 +81,9 @@ if (app.Environment.IsDevelopment())
 
 // Use CORS
 app.UseCors("AllowLocalhost");
+
+// Use HTTPS redirection
+app.UseHttpsRedirection();
 
 // Use authorization
 app.UseAuthorization();
