@@ -110,6 +110,14 @@ const Icon = {
 };
 
 export default function ChatPage() {
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const languageOptions = [
+  { code: "en", name: "English", emoji: "🇺🇸" },
+  { code: "zh", name: "Chinese", emoji: "🇨🇳" },
+  { code: "fr", name: "French", emoji: "🇫🇷" },
+  { code: "de", name: "German", emoji: "🇩🇪" },
+  { code: "ru", name: "Russian", emoji: "🇷🇺" },
+];
   const { chatMessages, setChatMessages, currentUser, ttsSpeed, setTtsSpeed } = useContext(AppContext);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -276,8 +284,18 @@ export default function ChatPage() {
       }
     }
 
+    const languageMap = {
+      en: "English",
+      zh: "Chinese",
+      fr: "French",
+      de: "German",
+      ru: "Russian",
+    };
+    const languageName = languageMap[selectedLanguage];
+    const messageForBot = `${userMessage.text} [Please respond to me in ${languageName}]`;
+
     try {
-      const data = await sendMessage(userMessage.text, currentUser?.id);
+      const data = await sendMessage(messageForBot, currentUser?.id);
 
       const botMessage = {
         text: data.message || "Sorry, I couldn't process that request.",
@@ -651,6 +669,23 @@ export default function ChatPage() {
 
       <div className="input-container">
         <div className="speed-control-wrapper">
+          <div className="language-selector-wrapper">
+            <label htmlFor="language-select" className="language-label">
+              Language:
+            </label>
+            <select
+              id="language-select"
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="language-select-dropdown"
+            >
+              {languageOptions.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.emoji} {option.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <span className="speed-label">Speech Speed:</span>
           <button
             onClick={() => adjustTTSSpeed(-0.1)}
