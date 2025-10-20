@@ -1,19 +1,19 @@
 import {
+  Outlet,
+  Route,
   BrowserRouter as Router,
   Routes,
-  Route,
-  Outlet,
 } from "react-router-dom";
-import HomePage from "./components/homeComponent/HomePage";
-import ChatPage from "./components/chatComponent/ChatPage";
-import { FontSizeProvider } from "./contexts/FontSizeContext";
 import "./App.css";
-import CalendarPage from "./components/dailyRemindersComponent/CalendarPage";
-import PublicRoute from "./utils/PublicRoute";
-import PrivateRoute from "./utils/PrivateRoute";
 import LoginPage from "./components/LoginPage/LoginPage";
 import RegisterPage from "./components/RegisterPage/RegisterPage";
 import BrainExercisesPage from "./components/brainExercisesComponent/BrainExercises";
+import ChatPage from "./components/chatComponent/ChatPage";
+import CalendarPage from "./components/dailyRemindersComponent/CalendarPage";
+import HomePage from "./components/homeComponent/HomePage";
+import { FontSizeProvider } from "./contexts/FontSizeContext";
+import PrivateRoute from "./utils/PrivateRoute";
+import PublicRoute from "./utils/PublicRoute";
 
 function App() {
   return (
@@ -47,7 +47,6 @@ function App() {
             <Route path="menu" element={<HomePage />} />
             <Route path="exercises" element={<BrainExercisesPage />} />
             <Route path="reminders" element={<CalendarPage />} />
-            <Route path="settings" element={<div>Coming Soon: Settings</div>} />
           </Route>
         </Routes>
       </Router>

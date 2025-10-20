@@ -10,7 +10,7 @@
   --warning-amber-hover: #d97706;
   --purple: #8b5cf6;
   --purple-hover: #7c3aed;
-  
+
   /* Sophisticated color palette */
   --background-primary: #fafbfc;
   --background-secondary: #ffffff;
@@ -18,17 +18,20 @@
   --surface-elevated: #ffffff;
   --border-light: #e2e8f0;
   --border-medium: #cbd5e1;
-  
+
   /* Text colors */
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --text-tertiary: #94a3b8;
-  
+
   /* Shadows for depth */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .home-container {
@@ -44,16 +47,27 @@
 
 /* Add subtle pattern overlay with navy theme */
 .home-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    radial-gradient(circle at 25% 75%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+  background-image: radial-gradient(
+      circle at 25% 75%,
+      rgba(59, 130, 246, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 75% 25%,
+      rgba(255, 255, 255, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 40%,
+      rgba(16, 185, 129, 0.05) 0%,
+      transparent 50%
+    );
   pointer-events: none;
   z-index: 0;
 }
@@ -71,13 +85,18 @@
 }
 
 .home-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
 }
 
 .font-buttons-container {
@@ -155,13 +174,17 @@
 }
 
 .menu-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: 1;
@@ -189,7 +212,11 @@
 }
 
 .menu-button.chat:hover {
-  background: linear-gradient(135deg, var(--primary-blue-hover) 0%, #4338ca 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-blue-hover) 0%,
+    #4338ca 100%
+  );
   box-shadow: 0 20px 40px -5px rgba(59, 130, 246, 0.3);
 }
 
@@ -200,7 +227,11 @@
 }
 
 .menu-button.exercises:hover {
-  background: linear-gradient(135deg, var(--success-green-hover) 0%, #047857 100%);
+  background: linear-gradient(
+    135deg,
+    var(--success-green-hover) 0%,
+    #047857 100%
+  );
   box-shadow: 0 20px 40px -5px rgba(16, 185, 129, 0.3);
 }
 
@@ -211,20 +242,15 @@
 }
 
 .menu-button.reminders:hover {
-  background: linear-gradient(135deg, var(--warning-amber-hover) 0%, #b45309 100%);
+  background: linear-gradient(
+    135deg,
+    var(--warning-amber-hover) 0%,
+    #b45309 100%
+  );
   box-shadow: 0 20px 40px -5px rgba(245, 158, 11, 0.3);
 }
 
-.menu-button.settings {
-  background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);
-  color: white;
-  border-color: var(--purple);
-}
-
-.menu-button.settings:hover {
-  background: linear-gradient(135deg, var(--purple-hover) 0%, #6d28d9 100%);
-  box-shadow: 0 20px 40px -5px rgba(139, 92, 246, 0.3);
-}
+/* Settings button styles removed since the feature is not available */
 
 .menu-icon {
   width: 48px;
@@ -279,36 +305,36 @@
   .welcome-section {
     padding: 24px 20px 16px;
   }
-  
+
   .welcome-title {
     font-size: calc(var(--adjustable-font-size) + 8px);
   }
-  
+
   .welcome-subtitle {
     font-size: calc(var(--adjustable-font-size) + 1px);
   }
-  
+
   .menu-container {
     padding: 16px 20px 32px;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
   }
-  
+
   .menu-button {
     padding: 28px 20px;
     min-height: 180px;
     gap: 16px;
   }
-  
+
   .menu-icon {
     width: 40px;
     height: 40px;
   }
-  
+
   .menu-label {
     font-size: calc(var(--adjustable-font-size) + 2px);
   }
-  
+
   .menu-description {
     font-size: calc(var(--adjustable-font-size) - 1px);
   }
@@ -318,33 +344,33 @@
   .welcome-section {
     padding: 20px 16px 12px;
   }
-  
+
   .welcome-title {
     font-size: calc(var(--adjustable-font-size) + 6px);
   }
-  
+
   .menu-container {
     padding: 12px 16px 24px;
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .menu-button {
     padding: 24px 20px;
     min-height: 160px;
     gap: 14px;
     border-radius: 16px;
   }
-  
+
   .menu-icon {
     width: 36px;
     height: 36px;
   }
-  
+
   .menu-label {
     font-size: calc(var(--adjustable-font-size) + 1px);
   }
-  
+
   .menu-description {
     font-size: calc(var(--adjustable-font-size) - 2px);
   }
@@ -380,19 +406,19 @@
   .menu-button {
     transition: none;
   }
-  
+
   .menu-button:hover {
     transform: none;
   }
-  
+
   .menu-icon {
     transition: none;
   }
-  
+
   .menu-button:hover .menu-icon {
     transform: none;
   }
-  
+
   .menu-button.chat:focus {
     animation: none;
   }
@@ -436,9 +462,12 @@
   grid-template-columns: 1fr auto auto; /* spacer | bubble | avatar */
 }
 
-.bot-row { justify-items: start; }
+.bot-row {
+  justify-items: start;
+}
 
-.left-cluster, .right-cluster {
+.left-cluster,
+.right-cluster {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -465,4 +494,6 @@
   color: #fff;
 }
 /* Ensure the SVG is visible on the green gradient */
-.play-button { color: #fff; }
+.play-button {
+  color: #fff;
+}
